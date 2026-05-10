@@ -1,10 +1,7 @@
-import javax.swing.*;
-import java.awt.*;
 
-import panels.AddWorkPanel;
-import panels.DashboardPanel;
-import panels.LoginPanel;
-import panels.ViewWorkPanel;
+import javax.swing.*;
+
+import java.awt.*;
 
 public class MainFrame extends JFrame{
     private CardLayout cardLayout;
@@ -49,10 +46,28 @@ public class MainFrame extends JFrame{
 
         setVisible(true);
     }
+
+
     public void showPanel(String panelName) {
         cardLayout.show(mainPanel, panelName);
+
+        if (panelName.equals("VIEW_WORK")) {
+            viewWorkPanel.refreshWork();
+        }
+
     }
     public AuthService getAuthService() {
         return authService;
+    }
+
+    public static void main(String[] args) {
+
+        SwingUtilities.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+                new MainFrame();
+            }
+        });
     }
 }

@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "MainFrame",
+            "request": "launch",
+            "mainClass": "MainFrame",
+            "projectName": "ECHO_afdbe177"
+        },
+        {
+            "type": "java",
+            "name": "Run MainFrame",
+            "request": "launch",
+            "mainClass": "echo.MainFrame",
+            "projectName": "ECHO"
+        }
+    ]
+}
