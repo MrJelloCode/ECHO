@@ -1,106 +1,111 @@
-// Source code is decompiled from a .class file using FernFlower decompiler (from Intellij IDEA).
-import courseWork.Assignment;
-import courseWork.Test;
 import java.util.ArrayList;
 
+import courseWork.*;
+
 public class AI {
-   private ArrayList<Assignment> assignments;
-   private ArrayList<Test> tests;
-   private double[] weights;
-   private double learningRate;
-   private int trainingCount;
-   private double dailyCapacity;
-   private double baseLineGrade;
+    private ArrayList<Assignment> assignments;
+    private ArrayList<Test> tests;
 
-   public AI() {
-      this.assignments = new ArrayList();
-      this.tests = new ArrayList();
-      this.weights = new double[4];
-      this.learningRate = 0.01;
-      this.trainingCount = 0;
-      this.dailyCapacity = (double)3.0F;
-      this.baseLineGrade = (double)85.0F;
-   }
+    //Base Attributes
+    private double[] weights;
+    private double learningRate;
+    private int trainingCount;
+    private double dailyCapacity;
+    private double baseLineGrade;
 
-   public AI(ArrayList<Assignment> var1, ArrayList<Test> var2, double[] var3, double var4, int var6, double var7, double var9) {
-      this.assignments = var1;
-      this.tests = var2;
-      this.weights = var3;
-      this.learningRate = var4;
-      this.trainingCount = var6;
-      this.dailyCapacity = var7;
-      this.baseLineGrade = var9;
-   }
+    //Constructors
+    public AI(){
+        assignments = new ArrayList<>();
+        tests = new ArrayList<>();
+        weights = new double[4];
+        learningRate = 0.01;
+        trainingCount = 0;
+        dailyCapacity = 3.0;
+        baseLineGrade  = 85.0;
+    }
 
-   public ArrayList<Assignment> getAssignments() {
-      return this.assignments;
-   }
+    public AI(ArrayList<Assignment> assignments, ArrayList<Test> tests, double[] weights, double learningRate, int trainingCount, double dailyCapacity, double baseLineGrade){
+        this.assignments = assignments;
+        this.tests = tests;
+        this.weights = weights;
+        this.learningRate = learningRate;
+        this.trainingCount = trainingCount;
+        this.dailyCapacity = dailyCapacity;
+        this.baseLineGrade = baseLineGrade;
+    }
 
-   public void setAssignments(ArrayList<Assignment> var1) {
-      this.assignments = var1;
-   }
+    //Getters and Setters
+    public ArrayList<Assignment> getAssignments() {
+        return assignments;
+    }
 
-   public ArrayList<Test> getTests() {
-      return this.tests;
-   }
+    public void setAssignments(ArrayList<Assignment> assignments) {
+        this.assignments = assignments;
+    }
 
-   public void setTests(ArrayList<Test> var1) {
-      this.tests = var1;
-   }
+    public ArrayList<Test> getTests() {
+        return tests;
+    }
 
-   public double[] getWeights() {
-      return this.weights;
-   }
+    public void setTests(ArrayList<Test> tests) {
+        this.tests = tests;
+    }
 
-   public void setWeights(double[] var1) {
-      this.weights = var1;
-   }
+    public double[] getWeights() {
+        return weights;
+    }
 
-   public double getLearningRate() {
-      return this.learningRate;
-   }
+    public void setWeights(double[] weights) {
+        this.weights = weights;
+    }
 
-   public void setLearningRate(double var1) {
-      this.learningRate = var1;
-   }
+    public double getLearningRate() {
+        return learningRate;
+    }
 
-   public int getTrainingCount() {
-      return this.trainingCount;
-   }
+    public void setLearningRate(double learningRate) {
+        this.learningRate = learningRate;
+    }
 
-   public void setTrainingCount(int var1) {
-      this.trainingCount = var1;
-   }
+    public int getTrainingCount() {
+        return trainingCount;
+    }
 
-   public double getDailyCapacity() {
-      return this.dailyCapacity;
-   }
+    public void setTrainingCount(int trainingCount) {
+        this.trainingCount = trainingCount;
+    }
 
-   public void setDailyCapacity(double var1) {
-      this.dailyCapacity = var1;
-   }
+    public double getDailyCapacity() {
+        return dailyCapacity;
+    }
 
-   public double getBaselineGrade() {
-      return this.baseLineGrade;
-   }
+    public void setDailyCapacity(double dailyCapacity) {
+        this.dailyCapacity = dailyCapacity;
+    }
 
-   public void setBaselineGrade(double var1) {
-      this.baseLineGrade = var1;
-   }
+    public double getBaselineGrade() {
+        return baseLineGrade;
+    }
 
-   public void addAssignment(Assignment var1) {
-      this.assignments.add(var1);
-   }
+    public void setBaselineGrade(double baselineGrade) {
+        this.baseLineGrade = baselineGrade;
+    }
 
-   public void removeAssignment(Assignment var1) {
-      this.assignments.remove(var1);
-   }
+    // ARRAYLIST METHODS
 
-   public void addTest(Test var1) {
-      this.tests.add(var1);
-   }
+    public void addAssignment(Assignment assignment) {
+        assignments.add(assignment);
+    }
 
-   public void removeTest(Test var1) {
-      this.tests.remove(var1);
-   }
+    public void removeAssignment(Assignment assignment) {
+        assignments.remove(assignment);
+    }
+
+    public void addTest(Test test) {
+        tests.add(test);
+    }
+
+    public void removeTest(Test test) {
+        tests.remove(test);
+    }
 }

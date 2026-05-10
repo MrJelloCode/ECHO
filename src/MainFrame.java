@@ -56,9 +56,6 @@ public class MainFrame extends JFrame{
         }
 
     }
-    public AuthService getAuthService() {
-        return authService;
-    }
 
     public static void main(String[] args) {
 

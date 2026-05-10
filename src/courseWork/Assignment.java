@@ -2,14 +2,13 @@ package courseWork;
 import java.time.LocalDate;
 
 public class Assignment{
+
     private String assignmentName;
     private String courseName;
 
     private int difficulty;
-    private int topicComplexity;
 
     private double hoursSpent;
-    private int daysWorked;
 
     private double predictedGrade;
 
@@ -18,15 +17,13 @@ public class Assignment{
 
     private boolean completed;
 
-    public Assignment(String assignmentName, String courseName, int difficulty, int topicComplexity, double hoursSpent, int daysWorked, double predictedGrade, LocalDate dueDate, LocalDate startDate, boolean completed){
+    public Assignment(String assignmentName, String courseName, int difficulty, double hoursSpent, double predictedGrade, LocalDate dueDate, LocalDate startDate, boolean completed){
         this.assignmentName = assignmentName;
         this.courseName = courseName;
         
         this.difficulty = difficulty;
-        this.topicComplexity = topicComplexity;
         
-        this.hoursSpent = hoursSpent; 
-        this.daysWorked = daysWorked;
+        this.hoursSpent = hoursSpent;
 
         this.predictedGrade = predictedGrade;
         
@@ -42,10 +39,9 @@ public class Assignment{
         courseName = "";
 
         difficulty = 1;
-        topicComplexity = 1;
 
         hoursSpent = 0.0;
-        daysWorked = 0;
+
 
         predictedGrade = 0.0;
 
@@ -79,13 +75,6 @@ public class Assignment{
         this.difficulty = difficulty;
     }
 
-    public int getTopicComplexity() {
-        return topicComplexity;
-    }
-
-    public void setTopicComplexity(int topicComplexity) {
-        this.topicComplexity = topicComplexity;
-    }
 
     public double getHoursSpent() {
         return hoursSpent;
@@ -95,13 +84,6 @@ public class Assignment{
         this.hoursSpent = hoursSpent;
     }
 
-    public int getDaysWorked() {
-        return daysWorked;
-    }
-
-    public void setDaysWorked(int daysWorked) {
-        this.daysWorked = daysWorked;
-    }
 
     public double getPredictedGrade() {
         return predictedGrade;
@@ -135,3 +117,4 @@ public class Assignment{
         this.completed = completed;
     }
 }
+

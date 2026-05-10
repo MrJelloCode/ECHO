@@ -1,5 +1,3 @@
-
-
 import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDate;
@@ -165,7 +163,7 @@ public class AddWorkPanel extends JPanel {
 
             LocalDate dueDate = LocalDate.parse(dueDateField.getText().trim());
 
-            Assignment assignment = new Assignment( assignmentName, courseName, difficulty, topicComplexity,  0.0,  0,  0.0,  dueDate, LocalDate.now(), false
+            Assignment assignment = new Assignment( assignmentName, courseName, difficulty,  0.0,  0.0,  dueDate, LocalDate.now(), false
             );
 
             authService.getCurrentAI().addAssignment(assignment);
