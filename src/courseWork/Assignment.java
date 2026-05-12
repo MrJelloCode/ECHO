@@ -1,8 +1,15 @@
+/*
+Name: Malaravan.V
+Date: May 11th 2026
+Purpose: Represents an assignment with its details
+*/
+
+// Libraries and packages
 package courseWork;
 import java.time.LocalDate;
-
 public class Assignment{
 
+    // Attributes of the Assignment class
     private String assignmentName;
     private String courseName;
 
@@ -17,6 +24,7 @@ public class Assignment{
 
     private boolean completed;
 
+    // Constructor to initialize an Assignment object with all attributes (Overloaded)
     public Assignment(String assignmentName, String courseName, int difficulty, double hoursSpent, double predictedGrade, LocalDate dueDate, LocalDate startDate, boolean completed){
         this.assignmentName = assignmentName;
         this.courseName = courseName;
@@ -34,6 +42,7 @@ public class Assignment{
 
     }
 
+    // Default constructor to initialize an Assignment object with default values (Overrided)
     public Assignment(){
         assignmentName = "";
         courseName = "";
@@ -51,6 +60,7 @@ public class Assignment{
         completed = false;
     }
 
+    // Getters and setters for all attributes of the Assignment class
     public String getAssignmentName() {
         return assignmentName;
     }

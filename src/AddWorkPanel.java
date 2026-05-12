@@ -1,16 +1,25 @@
+/*
+Name: Malaravan.V
+Date: May 11th 2026
+Purpose: Panel for adding new assignments to the user's workload
+*/
+
+
+// Import Libraries
 import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDate;
 
 import courseWork.Assignment;
 
-
 public class AddWorkPanel extends JPanel {
 
+    // Reference to the main frame and authentication service
     private MainFrame frame;
 
     private AuthService authService;
 
+    // UI Components
     private JLabel titleLabel;
 
     private JLabel nameLabel;
@@ -22,8 +31,6 @@ public class AddWorkPanel extends JPanel {
     private JLabel difficultyLabel;
     private JTextField difficultyField;
 
-    private JLabel topicLabel;
-    private JTextField topicField;
 
     private JLabel dueDateLabel;
     private JTextField dueDateField;
@@ -32,10 +39,10 @@ public class AddWorkPanel extends JPanel {
 
     private JButton backButton;
 
-    // DEFAULT CONSTRUCTOR
-
+    // DEFAULT CONSTRUCTOR (Overloaded)
     public AddWorkPanel(MainFrame frame, AuthService authService) {
 
+        // Initialize references and set up the panel
         this.frame = frame;
 
         this.authService = authService;
@@ -44,7 +51,7 @@ public class AddWorkPanel extends JPanel {
 
         setBackground(Color.WHITE);
 
-        // TITLE
+        // Title Label
 
         titleLabel = new JLabel("Add Assignment");
 
@@ -54,7 +61,7 @@ public class AddWorkPanel extends JPanel {
 
         add(titleLabel);
 
-        // NAME
+        // Name label and field for the assignment
 
         nameLabel = new JLabel("Assignment Name:");
 
@@ -68,7 +75,7 @@ public class AddWorkPanel extends JPanel {
 
         add(nameField);
 
-        // COURSE
+        // Course label and field for the assignment
 
         courseLabel = new JLabel("Course:");
 
@@ -82,7 +89,7 @@ public class AddWorkPanel extends JPanel {
 
         add(courseField);
 
-        // DIFFICULTY
+        // Difficulty label and field for the assignment
 
         difficultyLabel = new JLabel("Difficulty (1-5):");
 
@@ -96,21 +103,9 @@ public class AddWorkPanel extends JPanel {
 
         add(difficultyField);
 
-        // TOPIC COMPLEXITY
+    
 
-        topicLabel = new JLabel("Topic Complexity (1-5):");
-
-        topicLabel.setBounds(250, 270, 170, 25);
-
-        add(topicLabel);
-
-        topicField = new JTextField();
-
-        topicField.setBounds(420, 270, 220, 25);
-
-        add(topicField);
-
-        // DUE DATE
+        // Due Date label and field for the assignment
 
         dueDateLabel = new JLabel("Due Date (YYYY-MM-DD):");
 
@@ -124,7 +119,7 @@ public class AddWorkPanel extends JPanel {
 
         add(dueDateField);
 
-        // ADD BUTTON
+        // Add button for the assignment
 
         addButton = new JButton("Add");
 
@@ -132,7 +127,7 @@ public class AddWorkPanel extends JPanel {
 
         add(addButton);
 
-        // BACK BUTTON
+        // Back button for the assignment
 
         backButton = new JButton("Back");
 
@@ -140,14 +135,14 @@ public class AddWorkPanel extends JPanel {
 
         add(backButton);
 
-        // BUTTON ACTIONS
+        // Action listeners for the buttons
 
         addButton.addActionListener(e -> addAssignment());
 
         backButton.addActionListener(e -> frame.showPanel("DASHBOARD"));
     }
 
-    // ADD ASSIGNMENT METHOD
+    // Method to add an assignment based on user input and handle any exceptions
 
     private void addAssignment() {
 
@@ -159,7 +154,6 @@ public class AddWorkPanel extends JPanel {
 
             int difficulty = Integer.parseInt(difficultyField.getText().trim());
 
-            int topicComplexity = Integer.parseInt(topicField.getText().trim());
 
             LocalDate dueDate = LocalDate.parse(dueDateField.getText().trim());
 
@@ -181,7 +175,7 @@ public class AddWorkPanel extends JPanel {
         }
     }
 
-    // CLEAR INPUT FIELDS
+    // Clear input fields after adding an assignment or when needed
 
     private void clearFields() {
 
@@ -190,8 +184,6 @@ public class AddWorkPanel extends JPanel {
         courseField.setText("");
 
         difficultyField.setText("");
-
-        topicField.setText("");
 
         dueDateField.setText("");
     }

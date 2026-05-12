@@ -1,8 +1,16 @@
-import java.util.ArrayList;
+/*
+Name: Malaravan.V
+Date: May 11th 2026
+Purpose: AI class to manage the machine learning model for predicting optimal start times and workload management based on user data
+*/
 
+
+// Import Libraries
+import java.util.ArrayList;
 import courseWork.*;
 
 public class AI {
+    // Attributes to store user data, model parameters, and training information
     private ArrayList<Assignment> assignments;
     private ArrayList<Test> tests;
 
@@ -13,7 +21,7 @@ public class AI {
     private double dailyCapacity;
     private double baseLineGrade;
 
-    //Constructors
+    //Default Contructor (Overrided)
     public AI(){
         assignments = new ArrayList<>();
         tests = new ArrayList<>();
@@ -24,6 +32,7 @@ public class AI {
         baseLineGrade  = 85.0;
     }
 
+    // Overloaded Constructor to initialize the AI with specific data and parameters
     public AI(ArrayList<Assignment> assignments, ArrayList<Test> tests, double[] weights, double learningRate, int trainingCount, double dailyCapacity, double baseLineGrade){
         this.assignments = assignments;
         this.tests = tests;
@@ -34,7 +43,8 @@ public class AI {
         this.baseLineGrade = baseLineGrade;
     }
 
-    //Getters and Setters
+    //Getters and Setters for all attributes
+
     public ArrayList<Assignment> getAssignments() {
         return assignments;
     }
@@ -91,7 +101,7 @@ public class AI {
         this.baseLineGrade = baselineGrade;
     }
 
-    // ARRAYLIST METHODS
+    // Methods to manage assignments and tests, allowing for adding and removing items from the user's workload.
 
     public void addAssignment(Assignment assignment) {
         assignments.add(assignment);
