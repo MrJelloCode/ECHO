@@ -6,6 +6,8 @@ Purpose: AI class to manage the machine learning model for predicting optimal st
 
 
 // Import Libraries
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import courseWork.*;
 
@@ -117,5 +119,31 @@ public class AI {
 
     public void removeTest(Test test) {
         tests.remove(test);
+    }
+
+    public double predictRequiredHours(Assignment assignment) {
+
+        double difficultyWeight = 2.0;
+
+        double gradeModifier = baseLineGrade / 20.0;
+
+        double predictedHours = (assignment.getDifficulty() * difficultyWeight) + gradeModifier;
+
+        return predictedHours;
+    }
+
+    public int calculateProcrastinationDays(Assignment assignment) {
+
+        double predictedHours = predictRequiredHours(assignment);
+
+        double daysNeeded = predictedHours / dailyCapacity;
+
+        LocalDate today = LocalDate.now();
+
+        long daysUntilDue = ChronoUnit.DAYS.between( today, assignment.getDueDate() );
+
+        int procrastinationDays = (int)(daysUntilDue - daysNeeded);
+
+        return procrastinationDays;
     }
 }

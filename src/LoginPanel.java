@@ -78,7 +78,7 @@ public class LoginPanel extends JPanel {
 
                 authService.setCurrentUsername(username);
 
-                authService.setCurrentAI(new AI());
+                authService.loadUserData();
 
                 authService.setLoggedIn(true);
 

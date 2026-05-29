@@ -68,13 +68,13 @@ public class DashboardPanel extends JPanel {
         viewWorkButton.addActionListener(e -> frame.showPanel("VIEW_WORK"));
 
         logoutButton.addActionListener(e -> {
-
+            authService.saveUserData();
             authService.setCurrentUsername("");
 
             authService.setCurrentAI(new AI());
 
             authService.setLoggedIn(false);
-
+            
             frame.showPanel("LOGIN");
         });
     }

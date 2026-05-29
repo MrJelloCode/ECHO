@@ -8,6 +8,7 @@ Purpose: Panel for viewing the user's current workload, including assignments an
 // Import Libraries
 import javax.swing.*;
 import java.awt.*;
+import java.time.LocalDate;
 
 import courseWork.Assignment;
 import courseWork.Test;
@@ -98,6 +99,10 @@ public class ViewWorkPanel extends JPanel {
         }
         for (Assignment assignment : authService.getCurrentAI().getAssignments()) {
 
+            double predictedHours = authService.getCurrentAI().predictRequiredHours(assignment);
+            int procrastinationDays = authService.getCurrentAI().calculateProcrastinationDays(assignment);
+            LocalDate recommendedStartDate = assignment.getDueDate().minusDays(procrastinationDays);
+
             output.append("Name: ")
                   .append(assignment.getAssignmentName())
                   .append("\n");
@@ -114,6 +119,24 @@ public class ViewWorkPanel extends JPanel {
                   .append(assignment.isCompleted())
                   .append("\n");
 
+            output.append("Predicted Hours Needed: ")
+                  .append(String.format("%.2f", predictedHours))
+                  .append("\n");
+
+            if (procrastinationDays < 0) {
+
+            output.append("Day's Before Start: OVERDUE\n");
+
+            } else {
+
+            output.append("Days Before Start: ")
+                  .append(procrastinationDays)
+                  .append(" days remaining\n");
+            }
+
+            output.append("Recommended Start Date: ")
+                  .append(recommendedStartDate)
+                  .append("\n");
             output.append("---------------------------------------------\n");
         }
 

@@ -161,7 +161,7 @@ public class AddWorkPanel extends JPanel {
             );
 
             authService.getCurrentAI().addAssignment(assignment);
-
+            authService.saveUserData();
             JOptionPane.showMessageDialog(frame, "Assignment added.");
 
             clearFields();
