@@ -152,13 +152,47 @@ public class AddWorkPanel extends JPanel {
 
             String courseName = courseField.getText().trim();
 
+            // Check that name and course are not blank
+            if (assignmentName.isEmpty()) {
+                JOptionPane.showMessageDialog(frame, "Please enter an assignment name.");
+                return;
+            }
+
+            if (courseName.isEmpty()) {
+                JOptionPane.showMessageDialog(frame, "Please enter a course name.");
+                return;
+            }
+
             int difficulty = Integer.parseInt(difficultyField.getText().trim());
 
+            // Check that difficulty is within the valid range
+            if (difficulty < 1 || difficulty > 5) {
+                JOptionPane.showMessageDialog(frame, "Difficulty must be between 1 and 5.");
+                return;
+            }
 
             LocalDate dueDate = LocalDate.parse(dueDateField.getText().trim());
 
-            Assignment assignment = new Assignment( assignmentName, courseName, difficulty,  0.0,  0.0,  dueDate, LocalDate.now(), false
-            );
+            // Check that the due date is strictly after today (today itself is not valid —
+            // there would be zero days to work on it)
+            if (!dueDate.isAfter(LocalDate.now())) {
+                JOptionPane.showMessageDialog(frame, "Due date must be after today.");
+                return;
+            }
+
+            Assignment assignment = new Assignment( 
+                assignmentName, 
+                courseName, 
+                difficulty,  
+                0.0,  
+                0.0,  
+                dueDate, 
+                LocalDate.now(), 
+                false, 
+                0.0);
+
+            double predictedGrade = authService.getCurrentAI().predictGrade(assignment);
+            assignment.setPredictedGrade(predictedGrade);
 
             authService.getCurrentAI().addAssignment(assignment);
             authService.saveUserData();

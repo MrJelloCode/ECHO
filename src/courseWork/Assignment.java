@@ -18,6 +18,7 @@ public class Assignment{
     private double hoursSpent;
 
     private double predictedGrade;
+    private double gradeReceived;
 
     private LocalDate dueDate;
     private LocalDate startDate;
@@ -25,7 +26,7 @@ public class Assignment{
     private boolean completed;
 
     // Constructor to initialize an Assignment object with all attributes (Overloaded)
-    public Assignment(String assignmentName, String courseName, int difficulty, double hoursSpent, double predictedGrade, LocalDate dueDate, LocalDate startDate, boolean completed){
+    public Assignment(String assignmentName, String courseName, int difficulty, double hoursSpent, double predictedGrade, LocalDate dueDate, LocalDate startDate, boolean completed, double gradeReceived) {
         this.assignmentName = assignmentName;
         this.courseName = courseName;
         
@@ -39,6 +40,7 @@ public class Assignment{
         this.startDate = startDate;
 
         this.completed = completed;
+        this.gradeReceived = gradeReceived;
 
     }
 
@@ -99,6 +101,9 @@ public class Assignment{
         return predictedGrade;
     }
 
+    public void setGradeReceived(double gradeReceived) {
+        this.gradeReceived = gradeReceived;
+    }
     public void setPredictedGrade(double predictedGrade) {
         this.predictedGrade = predictedGrade;
     }
@@ -125,6 +130,20 @@ public class Assignment{
 
     public void setCompleted(boolean completed) {
         this.completed = completed;
+    }
+
+    public double getGradeReceived() {
+        return gradeReceived;
+    }
+
+    public double getPredictionError() {
+
+        return gradeReceived - predictedGrade;
+    }
+
+    @Override
+    public String toString() {
+        return assignmentName;
     }
 }
 

@@ -12,6 +12,10 @@ public class AuthService {
     private AI currentAI;
     private boolean loggedIn;
     
+    // Delimiter used to separate fields — pipe avoids clashing with commas in user text
+    private static final String DELIM = "|";
+    private static final String DELIM_REGEX = "\\|";
+
     public AuthService(){
         currentUsername = "";
         currentAI = new AI();
@@ -49,56 +53,59 @@ public class AuthService {
     }
 
 
-    // Main saving loggic for the AuthService class
+    // Main saving loggic for the AuthService class — saves all user data (AI settings, assignments, tests) to a text file in a structured format
 
-    public void saveUserData() {
+        public void saveUserData() {
 
-        try {
+        File folder = new File("data/users");
 
-            File folder = new File("data/users");
+        if (!folder.exists()) {
+            folder.mkdirs();
+        }
 
-            if (!folder.exists()) {
-                folder.mkdirs();
-            }
+        File userFile = new File(folder, currentUsername + ".txt");
 
-            File userFile = new File(folder, currentUsername + ".txt");
+        // Try-with-resources ensures the writer is always closed, even if an exception occurs
+        try (PrintWriter writer = new PrintWriter(userFile)) {
 
-            PrintWriter writer = new PrintWriter(userFile);
+            // SAVE AI settings (baseline grade, learning rate, trainingCount)
+            writer.println(
+                "AI" + DELIM +
+                currentAI.getBaselineGrade() + DELIM +
+                currentAI.getLearningRate() + DELIM +
+                currentAI.getTrainingCount()
+            );
 
             // SAVE ASSIGNMENTS
-
-            for (Assignment assignment :
-                    currentAI.getAssignments()) {
+            for (Assignment assignment : currentAI.getAssignments()) {
 
                 writer.println(
-                        "ASSIGNMENT," +
-                        assignment.getAssignmentName() + "," +
-                        assignment.getCourseName() + "," +
-                        assignment.getDifficulty() + "," +
-                        assignment.getHoursSpent() + "," +
-                        assignment.getPredictedGrade() + "," +
-                        assignment.getDueDate() + "," +
-                        assignment.getStartDate() + "," +
-                        assignment.isCompleted()
+                        "ASSIGNMENT" + DELIM +
+                        assignment.getAssignmentName() + DELIM +
+                        assignment.getCourseName() + DELIM +
+                        assignment.getDifficulty() + DELIM +
+                        assignment.getHoursSpent() + DELIM +
+                        assignment.getPredictedGrade() + DELIM +
+                        assignment.getDueDate() + DELIM +
+                        assignment.getStartDate() + DELIM +
+                        assignment.isCompleted() + DELIM +
+                        assignment.getGradeReceived()
                 );
             }
 
             // SAVE TESTS
-
             for (Test test : currentAI.getTests()) {
 
                 writer.println(
-                        "TEST," +
-                        test.getTestName() + "," +
-                        test.getCourseName() + "," +
-                        test.getDifficulty() + "," +
-                        test.getTopicComplexity() + "," +
-                        test.isCumulative() + "," +
+                        "TEST" + DELIM +
+                        test.getTestName() + DELIM +
+                        test.getCourseName() + DELIM +
+                        test.getDifficulty() + DELIM +
+                        test.getTopicComplexity() + DELIM +
+                        test.isCumulative() + DELIM +
                         test.getDueDate()
                 );
             }
-
-            writer.close();
 
         } catch (Exception e) {
 
@@ -110,60 +117,88 @@ public class AuthService {
 
         currentAI = new AI();
 
-        try {
+        File userFile = new File("data/users/" + currentUsername + ".txt");
 
-            File userFile = new File("data/users/" + currentUsername +".txt");
+        if (!userFile.exists()) {
+            return;
+        }
 
-            if (!userFile.exists()) {
-                return;
-            }
-
-            BufferedReader reader =
-                    new BufferedReader(new FileReader(userFile)
-                    );
+        // Try-with-resources ensures the reader is always closed
+        try (BufferedReader reader = new BufferedReader(new FileReader(userFile))) {
 
             String line;
 
             while ((line = reader.readLine()) != null) {
 
-                String[] data = line.split(",");
+                String[] data = line.split(DELIM_REGEX);
 
-                if (data[0].equals("ASSIGNMENT")) {
+                // Guard: skip any line that is too short to be valid
+                if (data.length < 2) {
+                    continue;
+                }
+
+                if (data[0].equals("AI")) {
+
+                    // Expect at least 4 fields: AI | baseline | learningRate | trainingCount
+                    if (data.length < 4) {
+                        System.out.println("Warning: AI line malformed, skipping: " + line);
+                        continue;
+                    }
+
+                    currentAI.setBaselineGrade(Double.parseDouble(data[1]));
+                    currentAI.setLearningRate(Double.parseDouble(data[2]));
+                    currentAI.setTrainingCount(Integer.parseInt(data[3]));
+
+                    System.out.println("Loaded Baseline Grade: " + currentAI.getBaselineGrade());
+                }
+
+                else if (data[0].equals("ASSIGNMENT")) {
+
+                    // Expect 10 fields: ASSIGNMENT | name | course | diff | hours | predictedGrade | dueDate | startDate | completed | gradeReceived
+                    if (data.length < 10) {
+                        System.out.println("Warning: ASSIGNMENT line malformed, skipping: " + line);
+                        continue;
+                    }
 
                     Assignment assignment = new Assignment(
-                                    data[1],
-                                    data[2],
-                                    Integer.parseInt(data[3]),
-                                    Double.parseDouble(data[4]),
-                                    Double.parseDouble(data[5]),
-                                    LocalDate.parse(data[6]),
-                                    LocalDate.parse(data[7]),
-                                    Boolean.parseBoolean(data[8])
-                            );
+                            data[1],
+                            data[2],
+                            Integer.parseInt(data[3]),
+                            Double.parseDouble(data[4]),
+                            Double.parseDouble(data[5]),
+                            LocalDate.parse(data[6]),
+                            LocalDate.parse(data[7]),
+                            Boolean.parseBoolean(data[8]),
+                            Double.parseDouble(data[9])
+                    );
 
                     currentAI.addAssignment(assignment);
                 }
 
                 else if (data[0].equals("TEST")) {
 
+                    // Expect 7 fields: TEST | name | course | diff | topicComplexity | cumulative | dueDate
+                    if (data.length < 7) {
+                        System.out.println("Warning: TEST line malformed, skipping: " + line);
+                        continue;
+                    }
+
                     Test test = new Test(
-                        data[1],
-                        data[2],
-                        Integer.parseInt(data[3]),
-                        Integer.parseInt(data[4]),
-                        Boolean.parseBoolean(data[5]),
-                        LocalDate.parse(data[6])
+                            data[1],
+                            data[2],
+                            Integer.parseInt(data[3]),
+                            Integer.parseInt(data[4]),
+                            Boolean.parseBoolean(data[5]),
+                            LocalDate.parse(data[6])
                     );
 
-                currentAI.addTest(test);
+                    currentAI.addTest(test);
                 }
             }
-
-            reader.close();
 
         } catch (Exception e) {
 
             e.printStackTrace();
         }
-}
+    }
 }

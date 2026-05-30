@@ -8,107 +8,194 @@ Purpose: Panel for viewing the user's current workload, including assignments an
 // Import Libraries
 import javax.swing.*;
 import java.awt.*;
-import java.time.LocalDate;
+
 
 import courseWork.Assignment;
-import courseWork.Test;
+
 public class ViewWorkPanel extends JPanel {
 
     private MainFrame frame;
 
     private AuthService authService;
-
     private JLabel titleLabel;
-
-    private JTextArea workArea;
-
-    private JScrollPane scrollPane;
-
     private JButton backButton;
 
+    private DefaultListModel<Assignment> assignmentModel;
+    private JList<Assignment> assignmentList;
+    private JScrollPane listScrollPane;
+    private JTextArea detailsArea;
+    private JScrollPane detailsScrollPane;
+    private JButton completeButton;   
+    
     // DEFAULT CONSTRUCTOR (Overloaded)
 
     public ViewWorkPanel(MainFrame frame, AuthService authService) {
 
       // Initialize references and set up the panel
 
-        this.frame = frame;
+      this.frame = frame;
 
-        this.authService = authService;
+      this.authService = authService;
 
-        setLayout(null);
+      setLayout(null);
 
-        setBackground(Color.WHITE);
+      setBackground(Color.WHITE);
 
 
         // Title label for the panel
-        titleLabel = new JLabel("Your Work");
+      titleLabel = new JLabel("Your Work");
 
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 26));
+      titleLabel.setFont(new Font("Arial", Font.BOLD, 26));
 
-        titleLabel.setBounds(400, 30, 250, 40);
+      titleLabel.setBounds(400, 30, 250, 40);
 
-        add(titleLabel);
+      add(titleLabel);
 
 
         // Text area to display the user's assignments and tests in a readable format
-        workArea = new JTextArea();
+        
+      assignmentModel = new DefaultListModel<>();
+      assignmentList = new JList<>(assignmentModel);
+      assignmentList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        workArea.setEditable(false);
+      listScrollPane = new JScrollPane(assignmentList);
 
-        workArea.setFont(new Font("Monospaced", Font.PLAIN, 14));
+      listScrollPane.setBounds(50, 100, 250, 400);
 
-        scrollPane = new JScrollPane(workArea);
+      add(listScrollPane);
 
-        scrollPane.setBounds(100, 100, 800, 450);
+      detailsArea = new JTextArea();
 
-        add(scrollPane);
+      detailsArea.setEditable(false);
+
+      detailsArea.setFont(
+            new Font("Monospaced",
+                  Font.PLAIN,
+                  14));
+
+      detailsScrollPane =
+            new JScrollPane(detailsArea);
+
+      detailsScrollPane.setBounds(
+            330,
+            100,
+            550,
+            400);
+
+      add(detailsScrollPane);
+
+      completeButton = new JButton("Mark Complete");
+
+      completeButton.setBounds(
+            500,
+            520,
+            180,
+            35);
+
+      add(completeButton);
 
 
         // Back button to return to the dashboard
-        backButton = new JButton("Back");
+      backButton = new JButton("Back");
 
-        backButton.setBounds(430, 580, 120, 35);
+      backButton.setBounds(430, 580, 120, 35);
 
-        add(backButton);
+      add(backButton);
 
         // Action listener for the back button to navigate back to the dashboard and refresh the view when returning
 
-        backButton.addActionListener(e -> frame.showPanel("DASHBOARD"));
+      assignmentList.addListSelectionListener(e -> {
+
+            if (!e.getValueIsAdjusting()) {
+
+                  showSelectedAssignment();
+            }
+      });
+
+      completeButton.addActionListener(e -> {
+            markAssignmentComplete();
+      });
+
+
+      backButton.addActionListener(e -> frame.showPanel("DASHBOARD"));
     }
+    
 
 
     // Refresh the work area with the latest assignments and tests from the user's AI, formatted for readability
     public void refreshWork() {
 
-      // Use StringBuilder for efficient string concatenation when building the display output
-        StringBuilder output = new StringBuilder();
+      assignmentModel.clear();
 
-        // Display the current username at the top of the work area for context
-        output.append("Logged in as: ")
-              .append(authService.getCurrentUsername())
-              .append("\n\n");
+      AI ai = authService.getCurrentAI();
 
-        output.append("ASSIGNMENTS\n");
-        output.append("---------------------------------------------\n");
+      boolean anyUpdated = false;
 
-        // Check if there are any assignments and display them, otherwise show a message indicating no assignments found
-        if (authService.getCurrentAI().getAssignments().size() == 0) {
+      for (Assignment assignment : ai.getAssignments()) {
 
-            output.append("No assignments found.\n");
-        }
-        for (Assignment assignment : authService.getCurrentAI().getAssignments()) {
+            // For incomplete assignments, recalculate the predicted grade every time
+            // the panel loads so the procrastination penalty stays current day-by-day
+            if (!assignment.isCompleted()) {
 
-            double predictedHours = authService.getCurrentAI().predictRequiredHours(assignment);
-            int procrastinationDays = authService.getCurrentAI().calculateProcrastinationDays(assignment);
-            LocalDate recommendedStartDate = assignment.getDueDate().minusDays(procrastinationDays);
+                  double updatedGrade = ai.predictGradeWithProcrastinationPenalty(assignment);
 
-            output.append("Name: ")
+                  // Only mark as changed if the grade actually shifted, to avoid
+                  // unnecessary saves when nothing has changed
+                  if (Math.abs(updatedGrade - assignment.getPredictedGrade()) > 0.001) {
+
+                        assignment.setPredictedGrade(updatedGrade);
+
+                        anyUpdated = true;
+                  }
+            }
+
+            assignmentModel.addElement(assignment);
+      }
+
+      // Persist updated grades so they survive a restart
+      if (anyUpdated) {
+
+            authService.saveUserData();
+      }
+        
+    }
+
+
+
+
+    private void showSelectedAssignment() {
+
+            Assignment assignment =
+                        assignmentList.getSelectedValue();
+
+            if (assignment == null) {
+
+                  return;
+            }
+
+            double predictedHours =
+                        authService.getCurrentAI()
+                              .predictRequiredHours(
+                                          assignment);
+
+            int procrastinationDays =
+                        authService.getCurrentAI()
+                              .calculateProcrastinationDays(
+                                          assignment);
+
+            StringBuilder output =
+                        new StringBuilder();
+
+            output.append("Assignment: ")
                   .append(assignment.getAssignmentName())
-                  .append("\n");
+                  .append("\n\n");
 
             output.append("Course: ")
                   .append(assignment.getCourseName())
+                  .append("\n");
+
+            output.append("Difficulty: ")
+                  .append(assignment.getDifficulty())
                   .append("\n");
 
             output.append("Due Date: ")
@@ -117,61 +204,150 @@ public class ViewWorkPanel extends JPanel {
 
             output.append("Completed: ")
                   .append(assignment.isCompleted())
+                  .append("\n\n");
+
+            output.append("Predicted Hours: ")
+                  .append(String.format("%.2f",
+                              predictedHours))
                   .append("\n");
 
-            output.append("Predicted Hours Needed: ")
-                  .append(String.format("%.2f", predictedHours))
-                  .append("\n");
+            if (procrastinationDays <= 0) {
 
-            if (procrastinationDays < 0) {
-
-            output.append("Day's Before Start: OVERDUE\n");
-
-            } else {
-
-            output.append("Days Before Start: ")
-                  .append(procrastinationDays)
-                  .append(" days remaining\n");
+                  output.append(
+                        "Time left before starting: START NOW")
+                        .append("\n");
             }
 
-            output.append("Recommended Start Date: ")
-                  .append(recommendedStartDate)
-                  .append("\n");
-            output.append("---------------------------------------------\n");
-        }
+            else {
 
-        // Display the tests in a similar format, checking for the presence of tests and formatting their details for readability
-        output.append("\nTESTS\n");
-        output.append("---------------------------------------------\n");
-
-        if (authService.getCurrentAI().getTests().size() == 0) {
-
-            output.append("No tests found.\n");
-        }
+                  output.append(
+                        "Time left before starting: ")
+                        .append(procrastinationDays)
+                        .append(" days")
+                        .append("\n");
+            }
+            
 
 
-        for (Test test : authService.getCurrentAI().getTests()) {
+            output.append("Predicted Grade: ")
+                  .append(String.format("%.1f",assignment.getPredictedGrade()))
+                  .append("%\n");
 
-            output.append("Name: ")
-                  .append(test.getTestName())
-                  .append("\n");
+            if (assignment.isCompleted()) {
 
-            output.append("Course: ")
-                  .append(test.getCourseName())
-                  .append("\n");
+                  output.append("\nHours Spent: ")
+                        .append(assignment.getHoursSpent())
+                        .append("\n");
 
-            output.append("Due Date: ")
-                  .append(test.getDueDate())
-                  .append("\n");
+                  output.append("Grade Received: ")
+                        .append(assignment.getGradeReceived())
+                        .append("\n");
 
-            output.append("Completed: ")
-                  .append(test.isCompleted())
-                  .append("\n");
+                  output.append("Prediction Error: ")
+                        .append(String.format("%.1f", assignment.getGradeReceived() - assignment.getPredictedGrade()))
+                        .append("\n");
+            }
 
-            output.append("---------------------------------------------\n");
-        }
+            output.append("AI Training Progress: ")
+                  .append(authService.getCurrentAI()
+                                    .getCompletedAssignmentCount())
+                  .append("/5 Assignments\n");
 
-        // Set the text of the work area to the formatted output string, allowing the user to see their current workload
-        workArea.setText(output.toString());
-    }
+            detailsArea.setText(output.toString());
+      }
+
+
+      private void markAssignmentComplete() {
+
+            Assignment assignment = assignmentList.getSelectedValue();
+
+            if (assignment == null) {
+
+                  JOptionPane.showMessageDialog(
+                        this,
+                        "Please select an assignment first."
+                  );
+
+                  return;
+            }
+            
+            if (assignment.isCompleted()) {
+
+                  JOptionPane.showMessageDialog(
+                              this,
+                              "This assignment is already completed."
+                  );
+
+                  return;
+            }
+
+            String hoursInput =
+                        JOptionPane.showInputDialog(
+                              this,
+                              "Enter hours spent:"
+                        );
+
+            if (hoursInput == null) {
+                  return;
+            }
+
+            String gradeInput =
+                        JOptionPane.showInputDialog(
+                              this,
+                              "Enter grade received:"
+                        );
+
+            if (gradeInput == null) {
+                  return;
+            }
+
+            try {
+
+                  double hoursSpent =
+                        Double.parseDouble(hoursInput);
+
+                  double gradeReceived =
+                        Double.parseDouble(gradeInput);
+
+                  // Validate hours is not negative
+                  if (hoursSpent < 0) {
+                        JOptionPane.showMessageDialog(this, "Hours spent cannot be negative.");
+                        return;
+                  }
+
+                  // Validate grade is within 0–100
+                  if (gradeReceived < 0 || gradeReceived > 100) {
+                        JOptionPane.showMessageDialog(this, "Grade must be between 0 and 100.");
+                        return;
+                  }
+
+                  assignment.setHoursSpent(hoursSpent);
+
+                  assignment.setGradeReceived(gradeReceived);
+
+                  assignment.setCompleted(true);
+
+                  authService.getCurrentAI().trainModel();
+
+                  authService.saveUserData();
+
+                  refreshWork();
+
+                  showSelectedAssignment();
+
+                  JOptionPane.showMessageDialog(
+                        this,
+                        "Assignment marked complete."
+                  );
+
+            }
+
+            catch (NumberFormatException e) {
+
+                  JOptionPane.showMessageDialog(
+                        this,
+                        "Please enter valid numbers."
+                  );
+            }
+      }
 }

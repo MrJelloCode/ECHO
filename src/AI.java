@@ -146,4 +146,155 @@ public class AI {
 
         return procrastinationDays;
     }
+    public LocalDate getRecommendedStartDate(Assignment assignment) {
+
+        double predictedHours = predictRequiredHours(assignment);
+
+        long daysNeeded = (long) Math.ceil(predictedHours / dailyCapacity);
+
+        return LocalDate.now().plusDays(daysNeeded);
+    }
+
+        public double calculateAverageGrade() {
+
+            double total = 0;
+            int count = 0;
+
+            for (Assignment assignment : assignments) {
+
+                if (assignment.isCompleted()) {
+
+                    total += assignment.getGradeReceived();
+                    count++;
+                }
+            }
+
+            if (count == 0) {
+
+                return baseLineGrade;
+            }
+
+            return total / count;
+        }
+
+        public double predictGrade(Assignment assignment) {
+
+            double studentAverage = calculateAverageGrade();
+
+            double difficultyPenalty = assignment.getDifficulty() * 2.5;
+
+            double predictedHours = predictRequiredHours(assignment);
+
+            double effortBonus = predictedHours * 0.4;
+
+            double predictedGrade = studentAverage - difficultyPenalty + effortBonus;
+
+            predictedGrade = Math.max(50, predictedGrade);
+
+            predictedGrade = Math.min(100, predictedGrade);
+
+            return predictedGrade;
+        }
+
+        // Recalculates the predicted grade with a penalty for each day the student
+        // has gone past the recommended start date without beginning.
+        // Each overdue day adds a 0.5% grade penalty on top of the base prediction.
+        // Returns the updated grade so the caller can store it back on the assignment.
+        public double predictGradeWithProcrastinationPenalty(Assignment assignment) {
+
+            double basePrediction = predictGrade(assignment);
+
+            int procrastinationDays = calculateProcrastinationDays(assignment);
+
+            // procrastinationDays > 0 means they still have buffer time — no penalty yet.
+            // procrastinationDays <= 0 means they are past the safe start window.
+            if (procrastinationDays >= 0) {
+
+                return basePrediction;
+            }
+
+            // daysOverdue is how many days past the deadline they have waited
+            int daysOverdue = Math.abs(procrastinationDays);
+
+            double penaltyPerDay = 0.5;
+
+            double totalPenalty = daysOverdue * penaltyPerDay;
+
+            double penalizedGrade = basePrediction - totalPenalty;
+
+            penalizedGrade = Math.max(50, penalizedGrade);
+
+            return penalizedGrade;
+        }
+
+        public void trainModel() {
+
+            int completedCount = 0;
+
+            double totalError = 0;
+
+            for (Assignment assignment : assignments) {
+
+                if (assignment.isCompleted()) {
+
+                    completedCount++;
+                }
+            }
+
+            if (completedCount < 5) {
+
+                return;
+            }
+
+            // Only train on assignments completed since the last training run
+            // trainingCount tracks how many assignments were trained on last time
+            int newlyCompleted = completedCount - trainingCount;
+
+            if (newlyCompleted <= 0) {
+
+                return;
+            }
+
+            // Sum the error only from the new completions (the last newlyCompleted ones)
+            int seen = 0;
+
+            for (int i = assignments.size() - 1; i >= 0 && seen < newlyCompleted; i--) {
+
+                Assignment assignment = assignments.get(i);
+
+                if (assignment.isCompleted()) {
+
+                    totalError +=
+                            assignment.getGradeReceived()
+                            - assignment.getPredictedGrade();
+
+                    seen++;
+                }
+            }
+
+            double averageError = totalError / newlyCompleted;
+
+            baseLineGrade += averageError * learningRate;
+            baseLineGrade = Math.max(50, baseLineGrade);
+            baseLineGrade = Math.min(100, baseLineGrade);
+
+            trainingCount = completedCount;
+
+        }
+
+        public int getCompletedAssignmentCount() {
+
+            int count = 0;
+
+            for (Assignment assignment : assignments) {
+
+                if (assignment.isCompleted()) {
+
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
 }
