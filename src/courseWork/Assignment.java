@@ -15,6 +15,9 @@ public class Assignment{
 
     private int difficulty;
 
+    // gradeGoal is the grade the student is aiming for on this assignment (0-100)
+    private double gradeGoal;
+
     private double hoursSpent;
 
     private double predictedGrade;
@@ -26,22 +29,23 @@ public class Assignment{
     private boolean completed;
 
     // Constructor to initialize an Assignment object with all attributes (Overloaded)
-    public Assignment(String assignmentName, String courseName, int difficulty, double hoursSpent, double predictedGrade, LocalDate dueDate, LocalDate startDate, boolean completed, double gradeReceived) {
+    public Assignment(String assignmentName, String courseName, int difficulty, double gradeGoal, double hoursSpent, double predictedGrade, LocalDate dueDate, LocalDate startDate, boolean completed, double gradeReceived) {
         this.assignmentName = assignmentName;
         this.courseName = courseName;
-        
+
         this.difficulty = difficulty;
-        
+
+        this.gradeGoal = gradeGoal;
+
         this.hoursSpent = hoursSpent;
 
         this.predictedGrade = predictedGrade;
-        
+
         this.dueDate = dueDate;
         this.startDate = startDate;
 
         this.completed = completed;
         this.gradeReceived = gradeReceived;
-
     }
 
     // Default constructor to initialize an Assignment object with default values (Overrided)
@@ -51,8 +55,9 @@ public class Assignment{
 
         difficulty = 1;
 
-        hoursSpent = 0.0;
+        gradeGoal = 80.0;
 
+        hoursSpent = 0.0;
 
         predictedGrade = 0.0;
 
@@ -85,6 +90,14 @@ public class Assignment{
 
     public void setDifficulty(int difficulty) {
         this.difficulty = difficulty;
+    }
+
+    public double getGradeGoal() {
+        return gradeGoal;
+    }
+
+    public void setGradeGoal(double gradeGoal) {
+        this.gradeGoal = gradeGoal;
     }
 
 
@@ -146,4 +159,3 @@ public class Assignment{
         return assignmentName;
     }
 }
-

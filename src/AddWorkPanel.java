@@ -31,6 +31,8 @@ public class AddWorkPanel extends JPanel {
     private JLabel difficultyLabel;
     private JTextField difficultyField;
 
+    private JLabel gradeGoalLabel;
+    private JTextField gradeGoalField;
 
     private JLabel dueDateLabel;
     private JTextField dueDateField;
@@ -103,7 +105,19 @@ public class AddWorkPanel extends JPanel {
 
         add(difficultyField);
 
-    
+        // Grade goal label and field for the assignment
+
+        gradeGoalLabel = new JLabel("Grade Goal (0-100):");
+
+        gradeGoalLabel.setBounds(250, 270, 160, 25);
+
+        add(gradeGoalLabel);
+
+        gradeGoalField = new JTextField();
+
+        gradeGoalField.setBounds(420, 270, 220, 25);
+
+        add(gradeGoalField);
 
         // Due Date label and field for the assignment
 
@@ -171,6 +185,14 @@ public class AddWorkPanel extends JPanel {
                 return;
             }
 
+            double gradeGoal = Double.parseDouble(gradeGoalField.getText().trim());
+
+            // Check that grade goal is within 0-100
+            if (gradeGoal < 0 || gradeGoal > 100) {
+                JOptionPane.showMessageDialog(frame, "Grade goal must be between 0 and 100.");
+                return;
+            }
+
             LocalDate dueDate = LocalDate.parse(dueDateField.getText().trim());
 
             // Check that the due date is strictly after today (today itself is not valid —
@@ -180,15 +202,16 @@ public class AddWorkPanel extends JPanel {
                 return;
             }
 
-            Assignment assignment = new Assignment( 
-                assignmentName, 
-                courseName, 
-                difficulty,  
-                0.0,  
-                0.0,  
-                dueDate, 
-                LocalDate.now(), 
-                false, 
+            Assignment assignment = new Assignment(
+                assignmentName,
+                courseName,
+                difficulty,
+                gradeGoal,
+                0.0,
+                0.0,
+                dueDate,
+                LocalDate.now(),
+                false,
                 0.0);
 
             double predictedGrade = authService.getCurrentAI().predictGrade(assignment);
@@ -218,6 +241,8 @@ public class AddWorkPanel extends JPanel {
         courseField.setText("");
 
         difficultyField.setText("");
+
+        gradeGoalField.setText("");
 
         dueDateField.setText("");
     }

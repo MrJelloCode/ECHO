@@ -12,10 +12,6 @@ public class AuthService {
     private AI currentAI;
     private boolean loggedIn;
     
-    // Delimiter used to separate fields — pipe avoids clashing with commas in user text
-    private static final String DELIM = "|";
-    private static final String DELIM_REGEX = "\\|";
-
     public AuthService(){
         currentUsername = "";
         currentAI = new AI();
@@ -53,9 +49,13 @@ public class AuthService {
     }
 
 
-    // Main saving loggic for the AuthService class — saves all user data (AI settings, assignments, tests) to a text file in a structured format
+    // Delimiter used to separate fields — pipe avoids clashing with commas in user text
+    private static final String DELIM = "|";
+    private static final String DELIM_REGEX = "\\|";
 
-        public void saveUserData() {
+    // Main saving logic for the AuthService class
+
+    public void saveUserData() {
 
         File folder = new File("data/users");
 
@@ -68,12 +68,15 @@ public class AuthService {
         // Try-with-resources ensures the writer is always closed, even if an exception occurs
         try (PrintWriter writer = new PrintWriter(userFile)) {
 
-            // SAVE AI settings (baseline grade, learning rate, trainingCount)
+            // SAVE AI settings (baseline grade, learning rate, trainingCount, weights)
             writer.println(
                 "AI" + DELIM +
                 currentAI.getBaselineGrade() + DELIM +
                 currentAI.getLearningRate() + DELIM +
-                currentAI.getTrainingCount()
+                currentAI.getTrainingCount() + DELIM +
+                currentAI.getWeights()[0] + DELIM +
+                currentAI.getWeights()[1] + DELIM +
+                currentAI.getWeights()[2]
             );
 
             // SAVE ASSIGNMENTS
@@ -84,6 +87,7 @@ public class AuthService {
                         assignment.getAssignmentName() + DELIM +
                         assignment.getCourseName() + DELIM +
                         assignment.getDifficulty() + DELIM +
+                        assignment.getGradeGoal() + DELIM +
                         assignment.getHoursSpent() + DELIM +
                         assignment.getPredictedGrade() + DELIM +
                         assignment.getDueDate() + DELIM +
@@ -139,8 +143,8 @@ public class AuthService {
 
                 if (data[0].equals("AI")) {
 
-                    // Expect at least 4 fields: AI | baseline | learningRate | trainingCount
-                    if (data.length < 4) {
+                    // Expect 7 fields: AI | baseline | learningRate | trainingCount | w0 | w1 | w2
+                    if (data.length < 7) {
                         System.out.println("Warning: AI line malformed, skipping: " + line);
                         continue;
                     }
@@ -149,13 +153,20 @@ public class AuthService {
                     currentAI.setLearningRate(Double.parseDouble(data[2]));
                     currentAI.setTrainingCount(Integer.parseInt(data[3]));
 
+                    double[] loadedWeights = new double[]{
+                        Double.parseDouble(data[4]),
+                        Double.parseDouble(data[5]),
+                        Double.parseDouble(data[6])
+                    };
+                    currentAI.setWeights(loadedWeights);
+
                     System.out.println("Loaded Baseline Grade: " + currentAI.getBaselineGrade());
                 }
 
                 else if (data[0].equals("ASSIGNMENT")) {
 
-                    // Expect 10 fields: ASSIGNMENT | name | course | diff | hours | predictedGrade | dueDate | startDate | completed | gradeReceived
-                    if (data.length < 10) {
+                    // Expect 11 fields: ASSIGNMENT | name | course | diff | gradeGoal | hours | predictedGrade | dueDate | startDate | completed | gradeReceived
+                    if (data.length < 11) {
                         System.out.println("Warning: ASSIGNMENT line malformed, skipping: " + line);
                         continue;
                     }
@@ -166,10 +177,11 @@ public class AuthService {
                             Integer.parseInt(data[3]),
                             Double.parseDouble(data[4]),
                             Double.parseDouble(data[5]),
-                            LocalDate.parse(data[6]),
+                            Double.parseDouble(data[6]),
                             LocalDate.parse(data[7]),
-                            Boolean.parseBoolean(data[8]),
-                            Double.parseDouble(data[9])
+                            LocalDate.parse(data[8]),
+                            Boolean.parseBoolean(data[9]),
+                            Double.parseDouble(data[10])
                     );
 
                     currentAI.addAssignment(assignment);

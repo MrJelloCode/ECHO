@@ -8,7 +8,7 @@ Purpose: Panel for viewing the user's current workload, including assignments an
 // Import Libraries
 import javax.swing.*;
 import java.awt.*;
-
+import java.time.LocalDate;
 
 import courseWork.Assignment;
 
@@ -173,15 +173,23 @@ public class ViewWorkPanel extends JPanel {
                   return;
             }
 
-            double predictedHours =
+            double estimatedHours =
                         authService.getCurrentAI()
-                              .predictRequiredHours(
+                              .estimateWorkloadHours(
                                           assignment);
 
-            int procrastinationDays =
+            double hoursToReachGoal =
                         authService.getCurrentAI()
-                              .calculateProcrastinationDays(
+                              .predictHoursToReachGoal(
                                           assignment);
+
+            LocalDate recommendedStartDate =
+                        authService.getCurrentAI()
+                              .getRecommendedStartDate(assignment);
+
+            long daysUntilStart =
+                        java.time.temporal.ChronoUnit.DAYS.between(
+                              LocalDate.now(), recommendedStartDate);
 
             StringBuilder output =
                         new StringBuilder();
@@ -198,6 +206,10 @@ public class ViewWorkPanel extends JPanel {
                   .append(assignment.getDifficulty())
                   .append("\n");
 
+            output.append("Grade Goal: ")
+                  .append(String.format("%.1f", assignment.getGradeGoal()))
+                  .append("%\n");
+
             output.append("Due Date: ")
                   .append(assignment.getDueDate())
                   .append("\n");
@@ -206,12 +218,17 @@ public class ViewWorkPanel extends JPanel {
                   .append(assignment.isCompleted())
                   .append("\n\n");
 
-            output.append("Predicted Hours: ")
-                  .append(String.format("%.2f",
-                              predictedHours))
-                  .append("\n");
+            output.append("Estimated Workload: ")
+                  .append(String.format("%.2f", estimatedHours))
+                  .append(" hrs (based on your habits)\n");
 
-            if (procrastinationDays <= 0) {
+            output.append("Hours to Reach Goal: ")
+                  .append(String.format("%.2f", hoursToReachGoal))
+                  .append(" hrs (to hit ")
+                  .append(String.format("%.1f", assignment.getGradeGoal()))
+                  .append("%)\n");
+
+            if (daysUntilStart <= 0) {
 
                   output.append(
                         "Time left before starting: START NOW")
@@ -222,7 +239,7 @@ public class ViewWorkPanel extends JPanel {
 
                   output.append(
                         "Time left before starting: ")
-                        .append(procrastinationDays)
+                        .append(daysUntilStart)
                         .append(" days")
                         .append("\n");
             }
@@ -248,10 +265,10 @@ public class ViewWorkPanel extends JPanel {
                         .append("\n");
             }
 
-            output.append("AI Training Progress: ")
+            output.append("Recommended Start Date: ")
                   .append(authService.getCurrentAI()
-                                    .getCompletedAssignmentCount())
-                  .append("/5 Assignments\n");
+                                    .getRecommendedStartDate(assignment))
+                  .append("\n");
 
             detailsArea.setText(output.toString());
       }
