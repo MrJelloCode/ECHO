@@ -122,42 +122,15 @@ public class ViewWorkPanel extends JPanel {
     
 
 
-    // Refresh the work area with the latest assignments and tests from the user's AI, formatted for readability
+    // Refresh the work area with the latest assignments from the user's AI
     public void refreshWork() {
 
       assignmentModel.clear();
 
-      AI ai = authService.getCurrentAI();
-
-      boolean anyUpdated = false;
-
-      for (Assignment assignment : ai.getAssignments()) {
-
-            // For incomplete assignments, recalculate the predicted grade every time
-            // the panel loads so the procrastination penalty stays current day-by-day
-            if (!assignment.isCompleted()) {
-
-                  double updatedGrade = ai.predictGradeWithProcrastinationPenalty(assignment);
-
-                  // Only mark as changed if the grade actually shifted, to avoid
-                  // unnecessary saves when nothing has changed
-                  if (Math.abs(updatedGrade - assignment.getPredictedGrade()) > 0.001) {
-
-                        assignment.setPredictedGrade(updatedGrade);
-
-                        anyUpdated = true;
-                  }
-            }
+      for (Assignment assignment : authService.getCurrentAI().getAssignments()) {
 
             assignmentModel.addElement(assignment);
       }
-
-      // Persist updated grades so they survive a restart
-      if (anyUpdated) {
-
-            authService.saveUserData();
-      }
-        
     }
 
 
@@ -172,11 +145,6 @@ public class ViewWorkPanel extends JPanel {
 
                   return;
             }
-
-            double estimatedHours =
-                        authService.getCurrentAI()
-                              .estimateWorkloadHours(
-                                          assignment);
 
             double hoursToReachGoal =
                         authService.getCurrentAI()
@@ -218,10 +186,6 @@ public class ViewWorkPanel extends JPanel {
                   .append(assignment.isCompleted())
                   .append("\n\n");
 
-            output.append("Estimated Workload: ")
-                  .append(String.format("%.2f", estimatedHours))
-                  .append(" hrs (based on your habits)\n");
-
             output.append("Hours to Reach Goal: ")
                   .append(String.format("%.2f", hoursToReachGoal))
                   .append(" hrs (to hit ")
@@ -246,10 +210,6 @@ public class ViewWorkPanel extends JPanel {
             
 
 
-            output.append("Predicted Grade: ")
-                  .append(String.format("%.1f",assignment.getPredictedGrade()))
-                  .append("%\n");
-
             if (assignment.isCompleted()) {
 
                   output.append("\nHours Spent: ")
@@ -258,10 +218,6 @@ public class ViewWorkPanel extends JPanel {
 
                   output.append("Grade Received: ")
                         .append(assignment.getGradeReceived())
-                        .append("\n");
-
-                  output.append("Prediction Error: ")
-                        .append(String.format("%.1f", assignment.getGradeReceived() - assignment.getPredictedGrade()))
                         .append("\n");
             }
 

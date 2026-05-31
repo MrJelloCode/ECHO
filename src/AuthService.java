@@ -68,10 +68,9 @@ public class AuthService {
         // Try-with-resources ensures the writer is always closed, even if an exception occurs
         try (PrintWriter writer = new PrintWriter(userFile)) {
 
-            // SAVE AI settings (baseline grade, learning rate, trainingCount, weights)
+            // SAVE AI settings (learning rate, trainingCount, weights)
             writer.println(
                 "AI" + DELIM +
-                currentAI.getBaselineGrade() + DELIM +
                 currentAI.getLearningRate() + DELIM +
                 currentAI.getTrainingCount() + DELIM +
                 currentAI.getWeights()[0] + DELIM +
@@ -89,7 +88,6 @@ public class AuthService {
                         assignment.getDifficulty() + DELIM +
                         assignment.getGradeGoal() + DELIM +
                         assignment.getHoursSpent() + DELIM +
-                        assignment.getPredictedGrade() + DELIM +
                         assignment.getDueDate() + DELIM +
                         assignment.getStartDate() + DELIM +
                         assignment.isCompleted() + DELIM +
@@ -143,30 +141,27 @@ public class AuthService {
 
                 if (data[0].equals("AI")) {
 
-                    // Expect 7 fields: AI | baseline | learningRate | trainingCount | w0 | w1 | w2
-                    if (data.length < 7) {
+                    // Expect 6 fields: AI | learningRate | trainingCount | w0 | w1 | w2
+                    if (data.length < 6) {
                         System.out.println("Warning: AI line malformed, skipping: " + line);
                         continue;
                     }
 
-                    currentAI.setBaselineGrade(Double.parseDouble(data[1]));
-                    currentAI.setLearningRate(Double.parseDouble(data[2]));
-                    currentAI.setTrainingCount(Integer.parseInt(data[3]));
+                    currentAI.setLearningRate(Double.parseDouble(data[1]));
+                    currentAI.setTrainingCount(Integer.parseInt(data[2]));
 
                     double[] loadedWeights = new double[]{
+                        Double.parseDouble(data[3]),
                         Double.parseDouble(data[4]),
-                        Double.parseDouble(data[5]),
-                        Double.parseDouble(data[6])
+                        Double.parseDouble(data[5])
                     };
                     currentAI.setWeights(loadedWeights);
-
-                    System.out.println("Loaded Baseline Grade: " + currentAI.getBaselineGrade());
                 }
 
                 else if (data[0].equals("ASSIGNMENT")) {
 
-                    // Expect 11 fields: ASSIGNMENT | name | course | diff | gradeGoal | hours | predictedGrade | dueDate | startDate | completed | gradeReceived
-                    if (data.length < 11) {
+                    // Expect 10 fields: ASSIGNMENT | name | course | diff | gradeGoal | hours | dueDate | startDate | completed | gradeReceived
+                    if (data.length < 10) {
                         System.out.println("Warning: ASSIGNMENT line malformed, skipping: " + line);
                         continue;
                     }
@@ -177,11 +172,10 @@ public class AuthService {
                             Integer.parseInt(data[3]),
                             Double.parseDouble(data[4]),
                             Double.parseDouble(data[5]),
-                            Double.parseDouble(data[6]),
+                            LocalDate.parse(data[6]),
                             LocalDate.parse(data[7]),
-                            LocalDate.parse(data[8]),
-                            Boolean.parseBoolean(data[9]),
-                            Double.parseDouble(data[10])
+                            Boolean.parseBoolean(data[8]),
+                            Double.parseDouble(data[9])
                     );
 
                     currentAI.addAssignment(assignment);

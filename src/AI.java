@@ -21,33 +21,30 @@ public class AI {
     private double learningRate;
     private int trainingCount;
     private double dailyCapacity;
-    private double baseLineGrade;
 
     //Default Contructor (Overrided)
     public AI(){
         assignments = new ArrayList<>();
         tests = new ArrayList<>();
 
-        // weights[0] = difficulty influence on hours
-        // weights[1] = historicalAverage influence on hours
-        // weights[2] = gradeGoal influence on hours
-        weights = new double[]{2.0, 0.05, 0.03};
+        // weights[0] = difficulty influence on hours  (data-fitted: 1.03 hrs per difficulty level)
+        // weights[1] = historicalAverage influence    (starts at 0, AI learns from your data)
+        // weights[2] = gradeGoal influence            (starts at 0, AI learns from your data)
+        weights = new double[]{1.03, 0.0, 0.0};
 
         learningRate = 0.01;
         trainingCount = 0;
-        dailyCapacity = 3.0;
-        baseLineGrade  = 85.0;
+        dailyCapacity = 2.5;
     }
 
-    // Overloaded Constructor to initialize the AI with specific data and parameters
-    public AI(ArrayList<Assignment> assignments, ArrayList<Test> tests, double[] weights, double learningRate, int trainingCount, double dailyCapacity, double baseLineGrade){
+    // Overloaded Constructor
+    public AI(ArrayList<Assignment> assignments, ArrayList<Test> tests, double[] weights, double learningRate, int trainingCount, double dailyCapacity){
         this.assignments = assignments;
         this.tests = tests;
         this.weights = weights;
         this.learningRate = learningRate;
         this.trainingCount = trainingCount;
         this.dailyCapacity = dailyCapacity;
-        this.baseLineGrade = baseLineGrade;
     }
 
     //Getters and Setters for all attributes
@@ -100,15 +97,7 @@ public class AI {
         this.dailyCapacity = dailyCapacity;
     }
 
-    public double getBaselineGrade() {
-        return baseLineGrade;
-    }
-
-    public void setBaselineGrade(double baselineGrade) {
-        this.baseLineGrade = baselineGrade;
-    }
-
-    // Methods to manage assignments and tests, allowing for adding and removing items from the user's workload.
+    // Methods to manage assignments and tests
 
     public void addAssignment(Assignment assignment) {
         assignments.add(assignment);
@@ -126,35 +115,12 @@ public class AI {
         tests.remove(test);
     }
 
-    // Estimates hours needed based on the student's habits and assignment properties.
-    // Uses the adaptive weighted formula — weights improve over time via trainModel().
-    // This is used for scheduling (procrastination days, recommended start date).
-    // predictedHours = (weights[0] * difficulty)
-    //                + (weights[1] * historicalAverage)
-    //                + (weights[2] * gradeGoal)
-    public double estimateWorkloadHours(Assignment assignment) {
-
-        double historicalAverage = calculateAverageGrade();
-
-        double estimatedHours = (weights[0] * assignment.getDifficulty())
-                              + (weights[1] * historicalAverage)
-                              + (weights[2] * assignment.getGradeGoal());
-
-        // Floor at 0.5 hours — no assignment should ever predict zero or negative time
-        return Math.max(0.5, estimatedHours);
-    }
-
-    // Calculates the exact hours the student needs to put in to reach their grade goal.
-    // Derived by reversing the predictGrade formula:
-    //   gradeGoal = studentAverage - difficultyPenalty + (hours * 0.4)
-    //   hours     = (gradeGoal - studentAverage + difficultyPenalty) / 0.4
-    // Returns at least 0.5 hours, and caps at a reasonable ceiling of 50 hours.
     public double predictHoursToReachGoal(Assignment assignment) {
 
-        double studentAverage   = calculateAverageGrade();
-        double difficultyPenalty = assignment.getDifficulty() * 2.5;
+        double baseHours = weights[0] * assignment.getDifficulty();
+        double ambitionBonus = (assignment.getGradeGoal() - 80.0) * 0.1;
 
-        double hoursNeeded = (assignment.getGradeGoal() - studentAverage + difficultyPenalty) / 0.4;
+        double hoursNeeded = baseHours + ambitionBonus;
 
         hoursNeeded = Math.max(0.5, hoursNeeded);
         hoursNeeded = Math.min(50.0, hoursNeeded);
@@ -164,201 +130,131 @@ public class AI {
 
     public int calculateProcrastinationDays(Assignment assignment) {
 
-        double predictedHours = estimateWorkloadHours(assignment);
+        double predictedHours = predictHoursToReachGoal(assignment);
 
-        double daysNeeded = predictedHours / dailyCapacity;
+        // Use ceil so a partial day still counts as a full day of work needed
+        long daysNeeded = (long) Math.ceil(predictedHours / dailyCapacity);
 
         LocalDate today = LocalDate.now();
 
-        long daysUntilDue = ChronoUnit.DAYS.between( today, assignment.getDueDate() );
+        long daysUntilDue = ChronoUnit.DAYS.between(today, assignment.getDueDate());
 
-        int procrastinationDays = (int)(daysUntilDue - daysNeeded);
-
-        return procrastinationDays;
+        return (int)(daysUntilDue - daysNeeded);
     }
+
     public LocalDate getRecommendedStartDate(Assignment assignment) {
 
-        double predictedHours = estimateWorkloadHours(assignment);
+        double predictedHours = predictHoursToReachGoal(assignment);
 
         long daysNeeded = (long) Math.ceil(predictedHours / dailyCapacity);
 
-        return LocalDate.now().plusDays(daysNeeded);
+        // Count back from the due date — this is the last safe day to start
+        return assignment.getDueDate().minusDays(daysNeeded);
     }
 
-        public double calculateAverageGrade() {
+    // Returns the average hours spent across all completed assignments.
+    // Falls back to a neutral 5.0 hours if no completed assignments exist yet.
+    public double calculateAverageHours() {
 
-            double total = 0;
-            int count = 0;
+        double total = 0;
+        int count = 0;
 
-            for (Assignment assignment : assignments) {
+        for (Assignment assignment : assignments) {
 
-                if (assignment.isCompleted()) {
+            if (assignment.isCompleted()) {
 
-                    total += assignment.getGradeReceived();
-                    count++;
-                }
+                total += assignment.getHoursSpent();
+                count++;
             }
-
-            if (count == 0) {
-
-                return baseLineGrade;
-            }
-
-            return total / count;
         }
 
-        public double predictGrade(Assignment assignment) {
+        if (count == 0) {
 
-            double studentAverage = calculateAverageGrade();
-
-            double difficultyPenalty = assignment.getDifficulty() * 2.5;
-
-            double predictedHours = estimateWorkloadHours(assignment);
-
-            double effortBonus = predictedHours * 0.4;
-
-            double predictedGrade = studentAverage - difficultyPenalty + effortBonus;
-
-            predictedGrade = Math.max(50, predictedGrade);
-
-            predictedGrade = Math.min(100, predictedGrade);
-
-            return predictedGrade;
+            return 5.0;
         }
 
-        // Recalculates the predicted grade with a penalty for each day the student
-        // has gone past the recommended start date without beginning.
-        // Each overdue day adds a 0.5% grade penalty on top of the base prediction.
-        // Returns the updated grade so the caller can store it back on the assignment.
-        public double predictGradeWithProcrastinationPenalty(Assignment assignment) {
+        return total / count;
+    }
 
-            double basePrediction = predictGrade(assignment);
+    public void trainModel() {
 
-            int procrastinationDays = calculateProcrastinationDays(assignment);
+        int completedCount = 0;
 
-            // procrastinationDays > 0 means they still have buffer time — no penalty yet.
-            // procrastinationDays <= 0 means they are past the safe start window.
-            if (procrastinationDays >= 0) {
+        for (Assignment assignment : assignments) {
 
-                return basePrediction;
+            if (assignment.isCompleted()) {
+
+                completedCount++;
             }
-
-            // daysOverdue is how many days past the deadline they have waited
-            int daysOverdue = Math.abs(procrastinationDays);
-
-            double penaltyPerDay = 0.5;
-
-            double totalPenalty = daysOverdue * penaltyPerDay;
-
-            double penalizedGrade = basePrediction - totalPenalty;
-
-            penalizedGrade = Math.max(50, penalizedGrade);
-
-            return penalizedGrade;
         }
 
-        public void trainModel() {
+        if (completedCount < 2) {
 
-            int completedCount = 0;
-
-            for (Assignment assignment : assignments) {
-
-                if (assignment.isCompleted()) {
-
-                    completedCount++;
-                }
-            }
-
-            if (completedCount < 5) {
-
-                return;
-            }
-
-            // Only train on assignments completed since the last training run
-            // trainingCount tracks how many assignments were trained on last time
-            int newlyCompleted = completedCount - trainingCount;
-
-            if (newlyCompleted <= 0) {
-
-                return;
-            }
-
-            double totalGradeError = 0;
-
-            // Per-weight error accumulators: how much each input feature contributed
-            // to the gap between predicted hours and actual hours spent
-            double totalDifficultyError    = 0;
-            double totalHistoricalError    = 0;
-            double totalGradeGoalError     = 0;
-
-            int seen = 0;
-
-            for (int i = assignments.size() - 1; i >= 0 && seen < newlyCompleted; i--) {
-
-                Assignment assignment = assignments.get(i);
-
-                if (assignment.isCompleted()) {
-
-                    // --- Grade error (for baselineGrade adaptation) ---
-                    totalGradeError +=
-                            assignment.getGradeReceived()
-                            - assignment.getPredictedGrade();
-
-                    // --- Hours error (for weight adaptation) ---
-                    // hoursError > 0 means we under-predicted (student needed more time)
-                    // hoursError < 0 means we over-predicted (student needed less time)
-                    double predictedHours = estimateWorkloadHours(assignment);
-                    double hoursError = assignment.getHoursSpent() - predictedHours;
-
-                    double historicalAverage = calculateAverageGrade();
-
-                    // Each weight's contribution to the error is proportional to its input value.
-                    // Nudge weights in the direction that reduces future error.
-                    totalDifficultyError  += hoursError * assignment.getDifficulty();
-                    totalHistoricalError  += hoursError * historicalAverage;
-                    totalGradeGoalError   += hoursError * assignment.getGradeGoal();
-
-                    seen++;
-                }
-            }
-
-            // --- Adapt baselineGrade ---
-            double averageGradeError = totalGradeError / newlyCompleted;
-
-            baseLineGrade += averageGradeError * learningRate;
-            baseLineGrade = Math.max(50, baseLineGrade);
-            baseLineGrade = Math.min(100, baseLineGrade);
-
-            // --- Adapt weights ---
-            // Divide by newlyCompleted to get average gradient, then step by learningRate.
-            // Each weight is clamped so it can't go negative (hours can't decrease
-            // because a factor gets larger) or grow unreasonably large.
-            weights[0] += (totalDifficultyError  / newlyCompleted) * learningRate;
-            weights[1] += (totalHistoricalError  / newlyCompleted) * learningRate;
-            weights[2] += (totalGradeGoalError   / newlyCompleted) * learningRate;
-
-            // Clamp weights to reasonable ranges so one outlier can't blow up the model
-            weights[0] = Math.max(0.5, Math.min(5.0,  weights[0])); // difficulty:        0.5–5.0 hrs per level
-            weights[1] = Math.max(0.0, Math.min(0.2,  weights[1])); // historicalAverage: 0.0–0.2 hrs per grade point
-            weights[2] = Math.max(0.0, Math.min(0.1,  weights[2])); // gradeGoal:         0.0–0.1 hrs per grade point
-
-            trainingCount = completedCount;
-
+            return;
         }
 
-        public int getCompletedAssignmentCount() {
+        // Only train on assignments completed since the last training run
+        int newlyCompleted = completedCount - trainingCount;
 
-            int count = 0;
+        if (newlyCompleted <= 0) {
 
-            for (Assignment assignment : assignments) {
-
-                if (assignment.isCompleted()) {
-
-                    count++;
-                }
-            }
-
-            return count;
+            return;
         }
 
+        // Per-weight error accumulators: how much each input feature contributed
+        // to the gap between predicted hours and actual hours spent
+        double totalDifficultyError  = 0;
+        double totalHistoricalError  = 0;
+        double totalGradeGoalError   = 0;
+
+        int seen = 0;
+
+        for (int i = assignments.size() - 1; i >= 0 && seen < newlyCompleted; i--) {
+
+            Assignment assignment = assignments.get(i);
+
+            if (assignment.isCompleted()) {
+
+                // hoursError > 0 means we under-predicted (student needed more time)
+                // hoursError < 0 means we over-predicted (student needed less time)
+                double predictedHours = predictHoursToReachGoal(assignment);
+                double hoursError = assignment.getHoursSpent() - predictedHours;
+
+                // Nudge each weight in the direction that reduces future error.
+                // w0 is driven by difficulty; w1/w2 are reserved for future inputs.
+                totalDifficultyError += hoursError * assignment.getDifficulty();
+                totalHistoricalError += hoursError * calculateAverageHours();
+                totalGradeGoalError  += hoursError * (assignment.getGradeGoal() - 80.0);
+
+                seen++;
+            }
+        }
+
+        // Adapt weights — divide by newlyCompleted to get average gradient
+        weights[0] += (totalDifficultyError / newlyCompleted) * learningRate;
+        weights[1] += (totalHistoricalError / newlyCompleted) * learningRate;
+        weights[2] += (totalGradeGoalError  / newlyCompleted) * learningRate;
+
+        // Clamp weights to reasonable ranges
+        weights[0] = Math.max(0.5, Math.min(5.0, weights[0])); // difficulty:        0.5–5.0 hrs per level
+        weights[1] = Math.max(0.0, Math.min(0.2, weights[1])); // historicalAverage: 0.0–0.2 hrs per grade point
+        weights[2] = Math.max(0.0, Math.min(0.1, weights[2])); // gradeGoal:         0.0–0.1 hrs per grade point
+
+        trainingCount = completedCount;
+    }
+
+    public int getCompletedAssignmentCount() {
+
+        int count = 0;
+
+        for (Assignment assignment : assignments) {
+
+            if (assignment.isCompleted()) {
+
+                count++;
+            }
+        }
+
+        return count;
+    }
 }

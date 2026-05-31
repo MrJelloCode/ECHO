@@ -195,8 +195,7 @@ public class AddWorkPanel extends JPanel {
 
             LocalDate dueDate = LocalDate.parse(dueDateField.getText().trim());
 
-            // Check that the due date is strictly after today (today itself is not valid —
-            // there would be zero days to work on it)
+            // Check that the due date is strictly after today (today itself is not valid — there would be zero days to work on it)
             if (!dueDate.isAfter(LocalDate.now())) {
                 JOptionPane.showMessageDialog(frame, "Due date must be after today.");
                 return;
@@ -208,14 +207,10 @@ public class AddWorkPanel extends JPanel {
                 difficulty,
                 gradeGoal,
                 0.0,
-                0.0,
                 dueDate,
                 LocalDate.now(),
                 false,
                 0.0);
-
-            double predictedGrade = authService.getCurrentAI().predictGrade(assignment);
-            assignment.setPredictedGrade(predictedGrade);
 
             authService.getCurrentAI().addAssignment(assignment);
             authService.saveUserData();
