@@ -1,6 +1,6 @@
 /*
 Name: Malaravan.V
-Date: May 11th 2026
+Date: June 1st 2026
 Purpose: AI class to manage the machine learning model for predicting optimal start times and workload management based on user data
 */
 
@@ -35,6 +35,7 @@ public class AI {
         learningRate = 0.01;
         trainingCount = 0;
         dailyCapacity = 2.5;
+
     }
 
     // Overloaded Constructor
@@ -115,12 +116,14 @@ public class AI {
         tests.remove(test);
     }
 
+    // Core prediction method: estimates hours needed to reach the grade goal based on assignment difficulty, historical average, and grade goal
     public double predictHoursToReachGoal(Assignment assignment) {
 
         double baseHours = weights[0] * assignment.getDifficulty();
-        double ambitionBonus = (assignment.getGradeGoal() - 80.0) * 0.1;
+        double ambitionBonus = (assignment.getGradeGoal() - 80.0) * weights[2];
+        double historyBonus = calculateAverageHours() * weights[1];
 
-        double hoursNeeded = baseHours + ambitionBonus;
+        double hoursNeeded = baseHours + ambitionBonus + historyBonus;
 
         hoursNeeded = Math.max(0.5, hoursNeeded);
         hoursNeeded = Math.min(50.0, hoursNeeded);
@@ -128,6 +131,7 @@ public class AI {
         return hoursNeeded;
     }
 
+    // Convert the hours into days until the assignment should be started, based on the predicted hours and the user's daily capacity.
     public int calculateProcrastinationDays(Assignment assignment) {
 
         double predictedHours = predictHoursToReachGoal(assignment);
@@ -142,6 +146,7 @@ public class AI {
         return (int)(daysUntilDue - daysNeeded);
     }
 
+    // Get the recommended start date by counting back from the due date based on the predicted hours and daily capacity
     public LocalDate getRecommendedStartDate(Assignment assignment) {
 
         double predictedHours = predictHoursToReachGoal(assignment);
@@ -152,8 +157,7 @@ public class AI {
         return assignment.getDueDate().minusDays(daysNeeded);
     }
 
-    // Returns the average hours spent across all completed assignments.
-    // Falls back to a neutral 5.0 hours if no completed assignments exist yet.
+    // Returns the average hours spent across all completed assignments. Falls back to a neutral 10.0 hours if no completed assignments exist yet.
     public double calculateAverageHours() {
 
         double total = 0;
@@ -170,12 +174,13 @@ public class AI {
 
         if (count == 0) {
 
-            return 5.0;
+            return 10.0;
         }
 
         return total / count;
     }
 
+    //Train the model by adjusting weights based on the error between predicted hours and actual hours spent on completed assignments since the last training run. 
     public void trainModel() {
 
         int completedCount = 0;
@@ -188,12 +193,13 @@ public class AI {
             }
         }
 
+        // Can only start training once we have at least 2 completed assignment to compare against.
         if (completedCount < 2) {
 
             return;
         }
 
-        // Only train on assignments completed since the last training run
+        // Only train on assignments completed since the last training run. That way early assignments don't have an outsized influence on the model as we gather more data.
         int newlyCompleted = completedCount - trainingCount;
 
         if (newlyCompleted <= 0) {
@@ -203,9 +209,9 @@ public class AI {
 
         // Per-weight error accumulators: how much each input feature contributed
         // to the gap between predicted hours and actual hours spent
-        double totalDifficultyError  = 0;
-        double totalHistoricalError  = 0;
-        double totalGradeGoalError   = 0;
+        double totalDifficultyError = 0;
+        double totalHistoricalError = 0;
+        double totalGradeGoalError = 0;
 
         int seen = 0;
 
@@ -243,6 +249,7 @@ public class AI {
         trainingCount = completedCount;
     }
 
+    // Method to count how many assignments have been completed. Used to determine when we have enough data to start training the model.
     public int getCompletedAssignmentCount() {
 
         int count = 0;

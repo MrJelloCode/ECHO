@@ -1,6 +1,6 @@
 /*
 Name: Malaravan.V
-Date: May 11th 2026
+Date: June 1st 2026
 Purpose: Panel for adding new assignments to the user's workload
 */
 
@@ -201,6 +201,7 @@ public class AddWorkPanel extends JPanel {
                 return;
             }
 
+            // If all inputs are valid, create a new Assignment object and add it to the user's AI, then save the data and clear the fields
             Assignment assignment = new Assignment(
                 assignmentName,
                 courseName,
@@ -217,8 +218,6 @@ public class AddWorkPanel extends JPanel {
             JOptionPane.showMessageDialog(frame, "Assignment added.");
 
             clearFields();
-
-            frame.showPanel("DASHBOARD");
 
         } catch (Exception e) {
 

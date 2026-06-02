@@ -1,6 +1,6 @@
 /*
 Name: Malaravan.V
-Date: May 11th 2026
+Date: June 1st 2026
 Purpose: Represents an assignment with its details
 */
 
@@ -138,7 +138,9 @@ public class Assignment{
         return gradeReceived;
     }
 
+    //
     @Override
+    // toString method to retun the name of the assignment. I know there is a getter for this but this is just more convenient for when we want to display the assignment in a list or something.
     public String toString() {
         return assignmentName;
     }

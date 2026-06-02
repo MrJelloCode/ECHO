@@ -1,7 +1,7 @@
 /*
 Name: Malaravan.V
-Date: May 11th 2026
-Purpose: Panel for viewing the user's current workload, including assignments and tests
+Date: June 1st 2026
+Purpose: Panel for viewing the user's current workload, including assignments and tests. Allows users to see the AI prediction for each assignment and mark assignments as complete with hours spent and grade received to update the AI model.
 */
 
 
@@ -84,6 +84,7 @@ public class ViewWorkPanel extends JPanel {
 
       add(detailsScrollPane);
 
+      // Button to mark assignments as complete
       completeButton = new JButton("Mark Complete");
 
       completeButton.setBounds(
@@ -95,15 +96,14 @@ public class ViewWorkPanel extends JPanel {
       add(completeButton);
 
 
-        // Back button to return to the dashboard
+      // Back button to return to the dashboard
       backButton = new JButton("Back");
 
       backButton.setBounds(430, 580, 120, 35);
 
       add(backButton);
 
-        // Action listener for the back button to navigate back to the dashboard and refresh the view when returning
-
+      // Refresh the assignment details when returning to this panel
       assignmentList.addListSelectionListener(e -> {
 
             if (!e.getValueIsAdjusting()) {
@@ -112,11 +112,12 @@ public class ViewWorkPanel extends JPanel {
             }
       });
 
+      // Action listener for the complete button to mark the selected assignment as complete and input hours spent and grade received
       completeButton.addActionListener(e -> {
             markAssignmentComplete();
       });
 
-
+      // Action listener for the back button to return to the dashboard
       backButton.addActionListener(e -> frame.showPanel("DASHBOARD"));
     }
     
@@ -125,6 +126,7 @@ public class ViewWorkPanel extends JPanel {
     // Refresh the work area with the latest assignments from the user's AI
     public void refreshWork() {
 
+      // Clear the current list and repopulate it with the latest assignments from the AI
       assignmentModel.clear();
 
       for (Assignment assignment : authService.getCurrentAI().getAssignments()) {
@@ -135,32 +137,24 @@ public class ViewWorkPanel extends JPanel {
 
 
 
-
+    // Display the details of the selected assignment in the details area, including AI predictions for hours to reach the grade goal and recommended start date
     private void showSelectedAssignment() {
 
-            Assignment assignment =
-                        assignmentList.getSelectedValue();
+            Assignment assignment = assignmentList.getSelectedValue();
 
             if (assignment == null) {
 
                   return;
             }
 
-            double hoursToReachGoal =
-                        authService.getCurrentAI()
-                              .predictHoursToReachGoal(
-                                          assignment);
 
-            LocalDate recommendedStartDate =
-                        authService.getCurrentAI()
-                              .getRecommendedStartDate(assignment);
+            double hoursToReachGoal = authService.getCurrentAI().predictHoursToReachGoal(assignment);
 
-            long daysUntilStart =
-                        java.time.temporal.ChronoUnit.DAYS.between(
-                              LocalDate.now(), recommendedStartDate);
+            LocalDate recommendedStartDate = authService.getCurrentAI().getRecommendedStartDate(assignment);
 
-            StringBuilder output =
-                        new StringBuilder();
+            long daysUntilStart = java.time.temporal.ChronoUnit.DAYS.between( LocalDate.now(), recommendedStartDate);
+
+            StringBuilder output = new StringBuilder();
 
             output.append("Assignment: ")
                   .append(assignment.getAssignmentName())
@@ -192,17 +186,20 @@ public class ViewWorkPanel extends JPanel {
                   .append(String.format("%.1f", assignment.getGradeGoal()))
                   .append("%)\n");
 
+            output.append("Recommended Start Date: ")
+                  .append(authService.getCurrentAI().getRecommendedStartDate(assignment))
+                  .append("\n");
+
+            // If the recommended start date is today or in the past, prompt the user to start immediately instead of showing a negative number of days until start
             if (daysUntilStart <= 0) {
 
-                  output.append(
-                        "Time left before starting: START NOW")
+                  output.append("Time left before starting: START NOW")
                         .append("\n");
             }
 
             else {
 
-                  output.append(
-                        "Time left before starting: ")
+                  output.append("Time left before starting: ")
                         .append(daysUntilStart)
                         .append(" days")
                         .append("\n");
@@ -210,6 +207,7 @@ public class ViewWorkPanel extends JPanel {
             
 
 
+            // If the assignment is completed, also show the hours spend and grade received.
             if (assignment.isCompleted()) {
 
                   output.append("\nHours Spent: ")
@@ -221,54 +219,35 @@ public class ViewWorkPanel extends JPanel {
                         .append("\n");
             }
 
-            output.append("Recommended Start Date: ")
-                  .append(authService.getCurrentAI()
-                                    .getRecommendedStartDate(assignment))
-                  .append("\n");
-
             detailsArea.setText(output.toString());
       }
 
 
+      // Method to mark the selected assignment as complete, input hours spent and grade received, update the AI model with the new data, and refresh the display
       private void markAssignmentComplete() {
 
             Assignment assignment = assignmentList.getSelectedValue();
 
+            // Validate that an assignment was selected and that all data is valid before marking the assignment as complete and updating the model. Show appropriate error messages if any checks fail.
             if (assignment == null) {
 
-                  JOptionPane.showMessageDialog(
-                        this,
-                        "Please select an assignment first."
-                  );
-
+                  JOptionPane.showMessageDialog(this, "Please select an assignment first.");
                   return;
             }
             
             if (assignment.isCompleted()) {
 
-                  JOptionPane.showMessageDialog(
-                              this,
-                              "This assignment is already completed."
-                  );
-
+                  JOptionPane.showMessageDialog(this, "This assignment is already completed.");
                   return;
             }
 
-            String hoursInput =
-                        JOptionPane.showInputDialog(
-                              this,
-                              "Enter hours spent:"
-                        );
+            String hoursInput = JOptionPane.showInputDialog( this, "Enter hours spent:");
 
             if (hoursInput == null) {
                   return;
             }
 
-            String gradeInput =
-                        JOptionPane.showInputDialog(
-                              this,
-                              "Enter grade received:"
-                        );
+            String gradeInput = JOptionPane.showInputDialog( this, "Enter grade received:");
 
             if (gradeInput == null) {
                   return;
@@ -276,11 +255,9 @@ public class ViewWorkPanel extends JPanel {
 
             try {
 
-                  double hoursSpent =
-                        Double.parseDouble(hoursInput);
+                  double hoursSpent = Double.parseDouble(hoursInput);
 
-                  double gradeReceived =
-                        Double.parseDouble(gradeInput);
+                  double gradeReceived = Double.parseDouble(gradeInput);
 
                   // Validate hours is not negative
                   if (hoursSpent < 0) {
@@ -294,6 +271,8 @@ public class ViewWorkPanel extends JPanel {
                         return;
                   }
 
+
+                  // Assign values to the assignment and mark it complete, update data in the AI model and save the user's data
                   assignment.setHoursSpent(hoursSpent);
 
                   assignment.setGradeReceived(gradeReceived);
@@ -308,18 +287,14 @@ public class ViewWorkPanel extends JPanel {
 
                   showSelectedAssignment();
 
-                  JOptionPane.showMessageDialog(
-                        this,
-                        "Assignment marked complete."
-                  );
+                  JOptionPane.showMessageDialog( this, "Assignment marked complete.");
 
             }
 
             catch (NumberFormatException e) {
+                  // Show an error message if the user decided to be silly and not use numbers for there inputs
+                  JOptionPane.showMessageDialog(this, "Please enter valid numbers."
 
-                  JOptionPane.showMessageDialog(
-                        this,
-                        "Please enter valid numbers."
                   );
             }
       }
