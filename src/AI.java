@@ -227,7 +227,7 @@ public class AI {
                 double hoursError = assignment.getHoursSpent() - predictedHours;
 
                 // Nudge each weight in the direction that reduces future error.
-                // w0 is driven by difficulty; w1/w2 are reserved for future inputs.
+                // w0 is driven by difficulty; w1/w2 are for averageHours/gradeGoal.
                 totalDifficultyError += hoursError * assignment.getDifficulty();
                 totalHistoricalError += hoursError * calculateAverageHours();
                 totalGradeGoalError  += hoursError * (assignment.getGradeGoal() - 80.0);
