@@ -103,9 +103,12 @@ public class AuthService {
                         test.getTestName() + DELIM +
                         test.getCourseName() + DELIM +
                         test.getDifficulty() + DELIM +
-                        test.getTopicComplexity() + DELIM +
                         test.isCumulative() + DELIM +
-                        test.getDueDate()
+                        test.getGradeGoal() + DELIM +
+                        test.getDueDate() + DELIM +
+                        test.getStartDate() + DELIM +
+                        test.isCompleted() + DELIM +
+                        test.getGradeReceived()
                 );
             }
 
@@ -183,8 +186,8 @@ public class AuthService {
 
                 else if (data[0].equals("TEST")) {
 
-                    // Expect 7 fields: TEST | name | course | diff | topicComplexity | cumulative | dueDate
-                    if (data.length < 7) {
+                    // Expect 11 fields: TEST | name | course | diff | topicComplexity | cumulative | gradeGoal | dueDate | startDate | completed | gradeReceived
+                    if (data.length < 11) {
                         System.out.println("Warning: TEST line malformed, skipping: " + line);
                         continue;
                     }
@@ -192,10 +195,13 @@ public class AuthService {
                     Test test = new Test(
                             data[1],
                             data[2],
-                            Integer.parseInt(data[3]),
-                            Integer.parseInt(data[4]),
-                            Boolean.parseBoolean(data[5]),
-                            LocalDate.parse(data[6])
+                           Integer.parseInt(data[3]),
+                             Boolean.parseBoolean(data[5]),
+                            Double.parseDouble(data[6]),
+                            LocalDate.parse(data[7]),
+                            LocalDate.parse(data[8]),
+                            Boolean.parseBoolean(data[9]),
+                            Double.parseDouble(data[10])
                     );
 
                     currentAI.addTest(test);

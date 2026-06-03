@@ -1,210 +1,224 @@
 /*
 Name: Malaravan.V
-Date: June 1st 2026
-Purpose: Panel for adding new assignments to the user's workload
+Date: May 11th 2026
+Purpose: Panel for adding new assignments or tests to the user's workload
 */
 
-
-// Import Libraries
+// Libraries and packages
 import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDate;
 
 import courseWork.Assignment;
+import courseWork.Test;
 
 public class AddWorkPanel extends JPanel {
 
-    // Reference to the main frame and authentication service
+    // Attributes
     private MainFrame frame;
-
     private AuthService authService;
 
-    // UI Components
-    private JLabel titleLabel;
+    // Toggle buttons to switch between Assignment and Test forms
+    private JButton assignmentToggle;
+    private JButton testToggle;
 
-    private JLabel nameLabel;
-    private JTextField nameField;
+    // Panels one for each form, swapped in/out by the toggle
+    private JPanel assignmentForm;
+    private JPanel testForm;
 
-    private JLabel courseLabel;
-    private JTextField courseField;
+    // Shared: the currently visible form
+    private JPanel currentForm;
 
-    private JLabel difficultyLabel;
-    private JTextField difficultyField;
+    // Assignment form fields
+    private JTextField aNameField;
+    private JTextField aCourseField;
+    private JTextField aDifficultyField;
+    private JTextField aGradeGoalField;
+    private JTextField aDueDateField;
 
-    private JLabel gradeGoalLabel;
-    private JTextField gradeGoalField;
+    // Test form fields
+    private JTextField tNameField;
+    private JTextField tCourseField;
+    private JTextField tDifficultyField;
 
-    private JLabel dueDateLabel;
-    private JTextField dueDateField;
+    private JCheckBox  tCumulativeCheckbox;
+    private JTextField tGradeGoalField;
+    private JTextField tDueDateField;
 
     private JButton addButton;
-
     private JButton backButton;
 
-    // DEFAULT CONSTRUCTOR (Overloaded)
     public AddWorkPanel(MainFrame frame, AuthService authService) {
 
-        // Initialize references and set up the panel
-        this.frame = frame;
-
+        this.frame       = frame;
         this.authService = authService;
 
         setLayout(null);
-
         setBackground(Color.WHITE);
 
-        // Title Label
-
-        titleLabel = new JLabel("Add Assignment");
-
+        // Title
+        JLabel titleLabel = new JLabel("Add Work");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
-
-        titleLabel.setBounds(390, 30, 250, 40);
-
+        titleLabel.setBounds(390, 20, 200, 40);
         add(titleLabel);
 
-        // Name label and field for the assignment
+        // Toggle buttons
+        assignmentToggle = new JButton("Assignment");
+        assignmentToggle.setBounds(270, 70, 150, 30);
+        add(assignmentToggle);
 
-        nameLabel = new JLabel("Assignment Name:");
+        testToggle = new JButton("Test");
+        testToggle.setBounds(440, 70, 150, 30);
+        add(testToggle);
 
-        nameLabel.setBounds(250, 120, 150, 25);
+        // Build both forms
+        assignmentForm = buildAssignmentForm();
+        testForm       = buildTestForm();
 
-        add(nameLabel);
+        // Show assignment form by default
+        currentForm = assignmentForm;
+        add(currentForm);
 
-        nameField = new JTextField();
-
-        nameField.setBounds(420, 120, 220, 25);
-
-        add(nameField);
-
-        // Course label and field for the assignment
-
-        courseLabel = new JLabel("Course:");
-
-        courseLabel.setBounds(250, 170, 150, 25);
-
-        add(courseLabel);
-
-        courseField = new JTextField();
-
-        courseField.setBounds(420, 170, 220, 25);
-
-        add(courseField);
-
-        // Difficulty label and field for the assignment
-
-        difficultyLabel = new JLabel("Difficulty (1-5):");
-
-        difficultyLabel.setBounds(250, 220, 150, 25);
-
-        add(difficultyLabel);
-
-        difficultyField = new JTextField();
-
-        difficultyField.setBounds(420, 220, 220, 25);
-
-        add(difficultyField);
-
-        // Grade goal label and field for the assignment
-
-        gradeGoalLabel = new JLabel("Grade Goal (0-100):");
-
-        gradeGoalLabel.setBounds(250, 270, 160, 25);
-
-        add(gradeGoalLabel);
-
-        gradeGoalField = new JTextField();
-
-        gradeGoalField.setBounds(420, 270, 220, 25);
-
-        add(gradeGoalField);
-
-        // Due Date label and field for the assignment
-
-        dueDateLabel = new JLabel("Due Date (YYYY-MM-DD):");
-
-        dueDateLabel.setBounds(250, 320, 170, 25);
-
-        add(dueDateLabel);
-
-        dueDateField = new JTextField();
-
-        dueDateField.setBounds(420, 320, 220, 25);
-
-        add(dueDateField);
-
-        // Add button for the assignment
-
+        // Add and Back buttons
         addButton = new JButton("Add");
-
-        addButton.setBounds(330, 420, 120, 35);
-
+        addButton.setBounds(330, 490, 120, 35);
         add(addButton);
 
-        // Back button for the assignment
-
         backButton = new JButton("Back");
-
-        backButton.setBounds(500, 420, 120, 35);
-
+        backButton.setBounds(500, 490, 120, 35);
         add(backButton);
 
-        // Action listeners for the buttons
-
-        addButton.addActionListener(e -> addAssignment());
-
+        // Listeners
+        assignmentToggle.addActionListener(e -> showForm(assignmentForm));
+        testToggle.addActionListener(e -> showForm(testForm));
+        addButton.addActionListener(e -> {
+            if (currentForm == assignmentForm) addAssignment();
+            else                               addTest();
+        });
         backButton.addActionListener(e -> frame.showPanel("DASHBOARD"));
     }
 
-    // Method to add an assignment based on user input and handle any exceptions
+    // Swap the visible form
+    private void showForm(JPanel form) {
+        remove(currentForm);
+        currentForm = form;
+        add(currentForm);
+        revalidate();
+        repaint();
+    }
 
+    // Assignment form builder 
+    private JPanel buildAssignmentForm() {
+
+        JPanel p = new JPanel(null);
+        p.setBackground(Color.WHITE);
+        p.setBounds(0, 110, 950, 370);
+
+        p.add(makeLabel("Assignment Name:", 250, 10));
+        aNameField = makeField(420, 10); p.add(aNameField);
+
+        p.add(makeLabel("Course:", 250, 60));
+        aCourseField = makeField(420, 60); p.add(aCourseField);
+
+        p.add(makeLabel("Difficulty (1-5):", 250, 110));
+        aDifficultyField = makeField(420, 110); p.add(aDifficultyField);
+
+        p.add(makeLabel("Grade Goal (0-100):", 250, 160));
+        aGradeGoalField = makeField(420, 160); p.add(aGradeGoalField);
+
+        p.add(makeLabel("Due Date (YYYY-MM-DD):", 250, 210));
+        aDueDateField = makeField(420, 210); p.add(aDueDateField);
+
+        return p;
+    }
+
+    // Test form builder 
+    private JPanel buildTestForm() {
+
+        JPanel p = new JPanel(null);
+        p.setBackground(Color.WHITE);
+        p.setBounds(0, 110, 950, 370);
+
+        p.add(makeLabel("Test Name:", 250, 10));
+        tNameField = makeField(420, 10); p.add(tNameField);
+
+        p.add(makeLabel("Course:", 250, 60));
+        tCourseField = makeField(420, 60); p.add(tCourseField);
+
+        p.add(makeLabel("Difficulty (1-5):", 250, 110));
+        tDifficultyField = makeField(420, 110); p.add(tDifficultyField);
+
+        p.add(makeLabel("Grade Goal (0-100):", 250, 210));
+        tGradeGoalField = makeField(420, 210); p.add(tGradeGoalField);
+
+        p.add(makeLabel("Due Date (YYYY-MM-DD):", 250, 260));
+        tDueDateField = makeField(420, 260); p.add(tDueDateField);
+
+        tCumulativeCheckbox = new JCheckBox("Cumulative");
+        tCumulativeCheckbox.setBackground(Color.WHITE);
+        tCumulativeCheckbox.setBounds(250, 310, 150, 25);
+        p.add(tCumulativeCheckbox);
+
+        return p;
+    }
+
+    // Helpers methods for formating
+    private JLabel makeLabel(String text, int x, int y) {
+        JLabel l = new JLabel(text);
+        l.setBounds(x, y, 170, 25);
+        return l;
+    }
+
+    private JTextField makeField(int x, int y) {
+        JTextField f = new JTextField();
+        f.setBounds(x, y, 220, 25);
+        return f;
+    }
+
+    // Add Assignment logic 
     private void addAssignment() {
 
+
+        //Validate all inputs and show error messages if invalid, otherwise create the assignment and save it to the user's data
         try {
 
-            String assignmentName = nameField.getText().trim();
+            String name   = aNameField.getText().trim();
+            String course = aCourseField.getText().trim();
 
-            String courseName = courseField.getText().trim();
-
-            // Check that name and course are not blank
-            if (assignmentName.isEmpty()) {
+            if (name.isEmpty()) {
                 JOptionPane.showMessageDialog(frame, "Please enter an assignment name.");
                 return;
             }
 
-            if (courseName.isEmpty()) {
+            if (course.isEmpty()) {
                 JOptionPane.showMessageDialog(frame, "Please enter a course name.");
                 return;
             }
 
-            int difficulty = Integer.parseInt(difficultyField.getText().trim());
+            int difficulty = Integer.parseInt(aDifficultyField.getText().trim());
 
-            // Check that difficulty is within the valid range
             if (difficulty < 1 || difficulty > 5) {
                 JOptionPane.showMessageDialog(frame, "Difficulty must be between 1 and 5.");
                 return;
             }
 
-            double gradeGoal = Double.parseDouble(gradeGoalField.getText().trim());
+            double gradeGoal = Double.parseDouble(aGradeGoalField.getText().trim());
 
-            // Check that grade goal is within 0-100
             if (gradeGoal < 0 || gradeGoal > 100) {
                 JOptionPane.showMessageDialog(frame, "Grade goal must be between 0 and 100.");
                 return;
             }
 
-            LocalDate dueDate = LocalDate.parse(dueDateField.getText().trim());
+            LocalDate dueDate = LocalDate.parse(aDueDateField.getText().trim());
 
-            // Check that the due date is strictly after today (today itself is not valid — there would be zero days to work on it)
             if (!dueDate.isAfter(LocalDate.now())) {
                 JOptionPane.showMessageDialog(frame, "Due date must be after today.");
                 return;
             }
 
-            // If all inputs are valid, create a new Assignment object and add it to the user's AI, then save the data and clear the fields
             Assignment assignment = new Assignment(
-                assignmentName,
-                courseName,
+                name,
+                course,
                 difficulty,
                 gradeGoal,
                 0.0,
@@ -215,29 +229,90 @@ public class AddWorkPanel extends JPanel {
 
             authService.getCurrentAI().addAssignment(assignment);
             authService.saveUserData();
-            JOptionPane.showMessageDialog(frame, "Assignment added.");
 
-            clearFields();
+            JOptionPane.showMessageDialog(frame, "Assignment added.");
+            clearAssignmentFields();
+            frame.showPanel("DASHBOARD");
 
         } catch (Exception e) {
-
-            JOptionPane.showMessageDialog(frame,
-                    "Invalid input. Please check your fields.");
+            JOptionPane.showMessageDialog(frame, "Invalid input. Please check your fields.");
         }
     }
 
-    // Clear input fields after adding an assignment or when needed
+    // Add Test logic
+    private void addTest() {
 
-    private void clearFields() {
+        //Validate all inputs and show error messages if invalid, otherwise create the test and save it to the user's data
+        try {
 
-        nameField.setText("");
+            String name   = tNameField.getText().trim();
+            String course = tCourseField.getText().trim();
 
-        courseField.setText("");
+            if (name.isEmpty()) {
+                JOptionPane.showMessageDialog(frame, "Please enter a test name.");
+                return;
+            }
 
-        difficultyField.setText("");
+            if (course.isEmpty()) {
+                JOptionPane.showMessageDialog(frame, "Please enter a course name.");
+                return;
+            }
 
-        gradeGoalField.setText("");
+            int difficulty = Integer.parseInt(tDifficultyField.getText().trim());
 
-        dueDateField.setText("");
+            if (difficulty < 1 || difficulty > 5) {
+                JOptionPane.showMessageDialog(frame, "Difficulty must be between 1 and 5.");
+                return;
+            }
+
+          
+            double gradeGoal = Double.parseDouble(tGradeGoalField.getText().trim());
+
+            if (gradeGoal < 0 || gradeGoal > 100) {
+                JOptionPane.showMessageDialog(frame, "Grade goal must be between 0 and 100.");
+                return;
+            }
+
+            LocalDate dueDate = LocalDate.parse(tDueDateField.getText().trim());
+
+            if (!dueDate.isAfter(LocalDate.now())) {
+                JOptionPane.showMessageDialog(frame, "Due date must be after today.");
+                return;
+            }
+
+            boolean cumulative = tCumulativeCheckbox.isSelected();
+
+            Test test = new Test(
+                name, course, difficulty,cumulative, gradeGoal, dueDate, LocalDate.now(), false, 0.0);
+
+            authService.getCurrentAI().addTest(test);
+            authService.saveUserData();
+
+            JOptionPane.showMessageDialog(frame, "Test added.");
+            clearTestFields();
+            frame.showPanel("DASHBOARD");
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(frame, "Invalid input. Please check your fields.");
+        }
+    }
+
+    //Clear form fields for assignments and tests
+    private void clearAssignmentFields() {
+        aNameField.setText("");
+        aCourseField.setText("");
+        aDifficultyField.setText("");
+        aGradeGoalField.setText("");
+        aDueDateField.setText("");
+    }
+
+    private void clearTestFields() {
+        tNameField.setText("");
+        tCourseField.setText("");
+        tDifficultyField.setText("");
+
+        tGradeGoalField.setText("");
+        tDueDateField.setText("");
+        tCumulativeCheckbox.setSelected(false);
     }
 }

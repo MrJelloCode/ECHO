@@ -11,11 +11,11 @@ public class Assignment{
 
     // Attributes of the Assignment class
     private String assignmentName;
+
     private String courseName;
 
     private int difficulty;
 
-    // gradeGoal is the grade the student is aiming for on this assignment (0-100)
     private double gradeGoal;
 
     private double hoursSpent;
@@ -30,6 +30,7 @@ public class Assignment{
     // Constructor to initialize an Assignment object with all attributes (Overloaded)
     public Assignment(String assignmentName, String courseName, int difficulty, double gradeGoal, double hoursSpent, LocalDate dueDate, LocalDate startDate, boolean completed, double gradeReceived) {
         this.assignmentName = assignmentName;
+        
         this.courseName = courseName;
 
         this.difficulty = difficulty;
@@ -39,9 +40,11 @@ public class Assignment{
         this.hoursSpent = hoursSpent;
 
         this.dueDate = dueDate;
+
         this.startDate = startDate;
 
         this.completed = completed;
+
         this.gradeReceived = gradeReceived;
     }
 
@@ -138,10 +141,9 @@ public class Assignment{
         return gradeReceived;
     }
 
-    //
+    // Returns assignment name and assignment tag to display in view work panels
     @Override
-    // toString method to retun the name of the assignment. I know there is a getter for this but this is just more convenient for when we want to display the assignment in a list or something.
     public String toString() {
-        return assignmentName;
+        return "[Assignment] " + assignmentName;
     }
 }

@@ -1,23 +1,27 @@
+/*
+Name: Malaravan.V
+Date: May 11th 2026
+Purpose: Represents a test with its details
+*/
+// Libraries and packages
 package courseWork;
 import java.time.LocalDate;
 
 public class Test {
-
+    // Attributes of the Test class
     private String testName;
 
     private String courseName;
 
     private int difficulty;
 
-    private int topicComplexity;
-
     private boolean cumulative;
 
-    private double predictedGrade;
+    private double gradeGoal;
 
     private double hoursSpent;
 
-    private int daysWorked;
+    private double gradeReceived;
 
     private LocalDate dueDate;
 
@@ -25,30 +29,41 @@ public class Test {
 
     private boolean completed;
 
+    // Default constructor
     public Test() {
-
+        testName = "";
+        courseName = "";
+        difficulty = 1;
+        cumulative = false;
+        gradeGoal = 80.0;
+        hoursSpent = 0.0;
+        gradeReceived = 0.0;
+        dueDate = LocalDate.now();
+        startDate = LocalDate.now();
+        completed = false;
     }
 
+    // Overloaded constructor
     public Test(String testName,
                 String courseName,
                 int difficulty,
-                int topicComplexity,
                 boolean cumulative,
-                LocalDate dueDate) {
+                double gradeGoal,
+                LocalDate dueDate,
+                LocalDate startDate,
+                boolean completed,
+                double gradeReceived) {
 
         this.testName = testName;
-
         this.courseName = courseName;
-
         this.difficulty = difficulty;
-
-        this.topicComplexity = topicComplexity;
-
         this.cumulative = cumulative;
-
+        this.gradeGoal  = gradeGoal;
+        this.hoursSpent = hoursSpent;
+        this.gradeReceived = gradeReceived;
         this.dueDate = dueDate;
-
-        completed = false;
+        this.startDate = startDate;
+        this.completed = completed;
     }
 
     // GETTERS & SETTERS
@@ -77,13 +92,7 @@ public class Test {
         this.difficulty = difficulty;
     }
 
-    public int getTopicComplexity() {
-        return topicComplexity;
-    }
-
-    public void setTopicComplexity(int topicComplexity) {
-        this.topicComplexity = topicComplexity;
-    }
+ 
 
     public boolean isCumulative() {
         return cumulative;
@@ -93,12 +102,12 @@ public class Test {
         this.cumulative = cumulative;
     }
 
-    public double getPredictedGrade() {
-        return predictedGrade;
+    public double getGradeGoal() {
+        return gradeGoal;
     }
 
-    public void setPredictedGrade(double predictedGrade) {
-        this.predictedGrade = predictedGrade;
+    public void setGradeGoal(double gradeGoal) {
+        this.gradeGoal = gradeGoal;
     }
 
     public double getHoursSpent() {
@@ -109,12 +118,12 @@ public class Test {
         this.hoursSpent = hoursSpent;
     }
 
-    public int getDaysWorked() {
-        return daysWorked;
+    public double getGradeReceived() {
+        return gradeReceived;
     }
 
-    public void setDaysWorked(int daysWorked) {
-        this.daysWorked = daysWorked;
+    public void setGradeReceived(double gradeReceived) {
+        this.gradeReceived = gradeReceived;
     }
 
     public LocalDate getDueDate() {
@@ -139,5 +148,10 @@ public class Test {
 
     public void setCompleted(boolean completed) {
         this.completed = completed;
+    }
+
+    // toString method to return the name of the test and the test tag to display in view work panels
+    public String toString() {
+        return "[Test] " + testName;
     }
 }

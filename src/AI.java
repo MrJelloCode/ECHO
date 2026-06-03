@@ -1,6 +1,6 @@
 /*
 Name: Malaravan.V
-Date: June 1st 2026
+Date: May 11th 2026
 Purpose: AI class to manage the machine learning model for predicting optimal start times and workload management based on user data
 */
 
@@ -35,7 +35,6 @@ public class AI {
         learningRate = 0.01;
         trainingCount = 0;
         dailyCapacity = 2.5;
-
     }
 
     // Overloaded Constructor
@@ -116,12 +115,14 @@ public class AI {
         tests.remove(test);
     }
 
-    // Core prediction method: estimates hours needed to reach the grade goal based on assignment difficulty, historical average, and grade goal
+    // Predicts hours needed to reach the student's grade goal.
+    // Formula: hours = (w0 * difficulty) + (gradeGoal - 80) * w2 + avgHours * w1
+    // Returns at least 0.5 hours, capped at 50 hours.
     public double predictHoursToReachGoal(Assignment assignment) {
 
-        double baseHours = weights[0] * assignment.getDifficulty();
+        double baseHours     = weights[0] * assignment.getDifficulty();
         double ambitionBonus = (assignment.getGradeGoal() - 80.0) * weights[2];
-        double historyBonus = calculateAverageHours() * weights[1];
+        double historyBonus  = calculateAverageHours() * weights[1];
 
         double hoursNeeded = baseHours + ambitionBonus + historyBonus;
 
@@ -131,33 +132,92 @@ public class AI {
         return hoursNeeded;
     }
 
-    // Convert the hours into days until the assignment should be started, based on the predicted hours and the user's daily capacity.
+    public double predictHoursToReachGoal(Test test) {
+
+        // If the test is cumulative, the effective difficulty is the average difficult of all tests in the same course, including this one, since the student needs to review material from every prior test as well
+        double effectiveDifficulty;
+
+        if (test.isCumulative()) {
+            effectiveDifficulty = calculateCumulativeDifficulty(test);
+        } else {
+            effectiveDifficulty = test.getDifficulty();
+        }
+
+        double baseHours     = weights[0] * effectiveDifficulty;
+        double ambitionBonus = (test.getGradeGoal() - 80.0) * weights[2];
+        double historyBonus  = calculateAverageHours() * weights[1];
+
+        double hoursNeeded = baseHours + ambitionBonus + historyBonus;
+
+        hoursNeeded = Math.max(0.5, hoursNeeded);
+        hoursNeeded = Math.min(50.0, hoursNeeded);
+
+        return hoursNeeded;
+    }
+
+    // Calculates the average difficulty of all tests with the same course name.
+    // Used when a test is marked cumulative — the student has to study everything covered in that course so far, not just the current test's material.
+    private double calculateCumulativeDifficulty(Test currentTest) {
+
+        double total = 0;
+        int count = 0;
+
+        for (Test t : tests) {
+
+            if (t.getCourseName().equalsIgnoreCase(currentTest.getCourseName())) {
+
+                total += t.getDifficulty();
+                count++;
+            }
+        }
+
+        // Fallback to the test's own difficulty if it's the only one in the course
+        if (count == 0) {
+            return currentTest.getDifficulty();
+        }
+
+        return total / count;
+    }
+
+    // Methods for calculating procrastination and recommended start dates based on the model's predictions
     public int calculateProcrastinationDays(Assignment assignment) {
 
         double predictedHours = predictHoursToReachGoal(assignment);
-
-        // Use ceil so a partial day still counts as a full day of work needed
         long daysNeeded = (long) Math.ceil(predictedHours / dailyCapacity);
-
-        LocalDate today = LocalDate.now();
-
-        long daysUntilDue = ChronoUnit.DAYS.between(today, assignment.getDueDate());
+        long daysUntilDue = ChronoUnit.DAYS.between(LocalDate.now(), assignment.getDueDate());
 
         return (int)(daysUntilDue - daysNeeded);
     }
 
-    // Get the recommended start date by counting back from the due date based on the predicted hours and daily capacity
+    // Similar to the above method but for tests instead of assignments
+    public int calculateProcrastinationDays(Test test) {
+
+        double predictedHours = predictHoursToReachGoal(test);
+        long daysNeeded = (long) Math.ceil(predictedHours / dailyCapacity);
+        long daysUntilDue = ChronoUnit.DAYS.between(LocalDate.now(), test.getDueDate());
+
+        return (int)(daysUntilDue - daysNeeded);
+    }
+
+    // Recommended start date is simply the due date minus the days needed to complete the work based on the model's predictions
     public LocalDate getRecommendedStartDate(Assignment assignment) {
 
         double predictedHours = predictHoursToReachGoal(assignment);
-
         long daysNeeded = (long) Math.ceil(predictedHours / dailyCapacity);
 
-        // Count back from the due date — this is the last safe day to start
         return assignment.getDueDate().minusDays(daysNeeded);
     }
 
-    // Returns the average hours spent across all completed assignments. Falls back to a neutral 10.0 hours if no completed assignments exist yet.
+    // Similar to the above method but for tests instead of assignments
+    public LocalDate getRecommendedStartDate(Test test) {
+
+        double predictedHours = predictHoursToReachGoal(test);
+        long daysNeeded = (long) Math.ceil(predictedHours / dailyCapacity);
+
+        return test.getDueDate().minusDays(daysNeeded);
+    }
+
+    // Returns the average hours spent across all completed assignments AND tests. Falls back to a neutral 2.5 hours if no completed work exists yet.
     public double calculateAverageHours() {
 
         double total = 0;
@@ -172,34 +232,34 @@ public class AI {
             }
         }
 
+        for (Test test : tests) {
+
+            if (test.isCompleted()) {
+
+                total += test.getHoursSpent();
+                count++;
+            }
+        }
+
         if (count == 0) {
 
-            return 10.0;
+            return 2.5;
         }
 
         return total / count;
     }
 
-    //Train the model by adjusting weights based on the error between predicted hours and actual hours spent on completed assignments since the last training run. 
+    // Training method to adjust the model's weights based on the user's completed work and how well the model's predictions matched reality. Uses a simple form of gradient descent to minimize prediction errors over time as more data is collected.
     public void trainModel() {
 
-        int completedCount = 0;
+        // Count all completed work — both assignments and tests
+        int completedCount = getCompletedWorkCount();
 
-        for (Assignment assignment : assignments) {
-
-            if (assignment.isCompleted()) {
-
-                completedCount++;
-            }
-        }
-
-        // Can only start training once we have at least 2 completed assignment to compare against.
-        if (completedCount < 2) {
+        if (completedCount < 5) {
 
             return;
         }
 
-        // Only train on assignments completed since the last training run. That way early assignments don't have an outsized influence on the model as we gather more data.
         int newlyCompleted = completedCount - trainingCount;
 
         if (newlyCompleted <= 0) {
@@ -207,59 +267,77 @@ public class AI {
             return;
         }
 
-        // Per-weight error accumulators: how much each input feature contributed
-        // to the gap between predicted hours and actual hours spent
-        double totalDifficultyError = 0;
-        double totalHistoricalError = 0;
-        double totalGradeGoalError = 0;
+        double totalDifficultyError  = 0;
+        double totalHistoricalError  = 0;
+        double totalGradeGoalError   = 0;
+
+        // Build a combined list of all completed work to train on
+        ArrayList<Object> allWork = new ArrayList<>();
+
+        for (Assignment a : assignments) {
+            if (a.isCompleted()) allWork.add(a);
+        }
+
+        for (Test t : tests) {
+            if (t.isCompleted()) allWork.add(t);
+        }
 
         int seen = 0;
 
-        for (int i = assignments.size() - 1; i >= 0 && seen < newlyCompleted; i--) {
+        // Iterate backwards through completed work to find the most recent ones that haven't been used for training yet, and calculate the prediction errors for those items to adjust the model's weights accordingly. More recent items are more relevant for training since they reflect the user's current habits and performance, so we prioritize those when updating the model.
+        for (int i = allWork.size() - 1; i >= 0 && seen < newlyCompleted; i--) {
 
-            Assignment assignment = assignments.get(i);
+            Object item = allWork.get(i);
 
-            if (assignment.isCompleted()) {
+            double predictedHours, hoursError, difficulty, gradeGoal;
 
-                // hoursError > 0 means we under-predicted (student needed more time)
-                // hoursError < 0 means we over-predicted (student needed less time)
-                double predictedHours = predictHoursToReachGoal(assignment);
-                double hoursError = assignment.getHoursSpent() - predictedHours;
-
-                // Nudge each weight in the direction that reduces future error.
-                // w0 is driven by difficulty; w1/w2 are for averageHours/gradeGoal.
-                totalDifficultyError += hoursError * assignment.getDifficulty();
-                totalHistoricalError += hoursError * calculateAverageHours();
-                totalGradeGoalError  += hoursError * (assignment.getGradeGoal() - 80.0);
-
-                seen++;
+            // Calculate the prediction error for this item based on its actual hours spent vs the model's predicted hours needed to reach the grade goal, and how that error relates to the item's difficulty, the user's historical average hours, and the grade goal itself. This error will be used to adjust the model's weights to improve future predictions.
+            if (item instanceof Assignment) {
+                Assignment a = (Assignment) item;
+                predictedHours = predictHoursToReachGoal(a);
+                hoursError = a.getHoursSpent() - predictedHours;
+                difficulty = a.getDifficulty();
+                gradeGoal = a.getGradeGoal();
+            } else {
+                Test t = (Test) item;
+                predictedHours = predictHoursToReachGoal(t);
+                hoursError = t.getHoursSpent() - predictedHours;
+                difficulty = t.getDifficulty();
+                gradeGoal = t.getGradeGoal();
             }
+
+            totalDifficultyError += hoursError * difficulty;
+            totalHistoricalError += hoursError * calculateAverageHours();
+            totalGradeGoalError += hoursError * (gradeGoal - 80.0);
+
+            seen++;
         }
 
-        // Adapt weights — divide by newlyCompleted to get average gradient
+        // Update weights based on the average error across all newly completed items since the last training session, multiplied by the learning rate to control how quickly the model adapts to new data.
         weights[0] += (totalDifficultyError / newlyCompleted) * learningRate;
         weights[1] += (totalHistoricalError / newlyCompleted) * learningRate;
         weights[2] += (totalGradeGoalError  / newlyCompleted) * learningRate;
 
-        // Clamp weights to reasonable ranges
-        weights[0] = Math.max(0.5, Math.min(5.0, weights[0])); // difficulty:        0.5–5.0 hrs per level
-        weights[1] = Math.max(0.0, Math.min(0.2, weights[1])); // historicalAverage: 0.0–0.2 hrs per grade point
-        weights[2] = Math.max(0.0, Math.min(0.1, weights[2])); // gradeGoal:         0.0–0.1 hrs per grade point
+        weights[0] = Math.max(0.5, Math.min(5.0, weights[0]));
+        weights[1] = Math.max(0.0, Math.min(0.2, weights[1]));
+        weights[2] = Math.max(0.0, Math.min(0.1, weights[2]));
 
         trainingCount = completedCount;
     }
 
-    // Method to count how many assignments have been completed. Used to determine when we have enough data to start training the model.
-    public int getCompletedAssignmentCount() {
+    // Returns total completed count across both assignments and tests
+    public int getCompletedWorkCount() {
 
         int count = 0;
 
         for (Assignment assignment : assignments) {
 
-            if (assignment.isCompleted()) {
+            if (assignment.isCompleted()) count++;
+        }
 
-                count++;
-            }
+        for (Test test : tests) {
+
+            if (test.isCompleted()) count++;
         }
 
         return count;
