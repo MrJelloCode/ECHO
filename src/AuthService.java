@@ -11,6 +11,11 @@ public class AuthService {
     private String currentUsername;
     private AI currentAI;
     private boolean loggedIn;
+
+    
+    // Delimiter used to separate fields — pipe avoids clashing with commas in user text
+    private static final String DELIM = "|";
+    private static final String DELIM_REGEX = "\\|";
     
     public AuthService(){
         currentUsername = "";
@@ -48,10 +53,6 @@ public class AuthService {
         this.loggedIn = loggedIn;
     }
 
-
-    // Delimiter used to separate fields — pipe avoids clashing with commas in user text
-    private static final String DELIM = "|";
-    private static final String DELIM_REGEX = "\\|";
 
     // Main saving logic for the AuthService class
 

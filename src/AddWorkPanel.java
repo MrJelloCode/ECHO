@@ -40,7 +40,6 @@ public class AddWorkPanel extends JPanel {
     private JTextField tNameField;
     private JTextField tCourseField;
     private JTextField tDifficultyField;
-
     private JCheckBox  tCumulativeCheckbox;
     private JTextField tGradeGoalField;
     private JTextField tDueDateField;
@@ -148,15 +147,15 @@ public class AddWorkPanel extends JPanel {
         p.add(makeLabel("Difficulty (1-5):", 250, 110));
         tDifficultyField = makeField(420, 110); p.add(tDifficultyField);
 
-        p.add(makeLabel("Grade Goal (0-100):", 250, 210));
-        tGradeGoalField = makeField(420, 210); p.add(tGradeGoalField);
+        p.add(makeLabel("Grade Goal (0-100):", 250, 160));
+        tGradeGoalField = makeField(420, 160); p.add(tGradeGoalField);
 
-        p.add(makeLabel("Due Date (YYYY-MM-DD):", 250, 260));
-        tDueDateField = makeField(420, 260); p.add(tDueDateField);
+        p.add(makeLabel("Due Date (YYYY-MM-DD):", 250, 210));
+        tDueDateField = makeField(420, 210); p.add(tDueDateField);
 
         tCumulativeCheckbox = new JCheckBox("Cumulative");
         tCumulativeCheckbox.setBackground(Color.WHITE);
-        tCumulativeCheckbox.setBounds(250, 310, 150, 25);
+        tCumulativeCheckbox.setBounds(250, 260, 150, 25);
         p.add(tCumulativeCheckbox);
 
         return p;

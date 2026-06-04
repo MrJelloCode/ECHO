@@ -176,7 +176,7 @@ public class AI {
             return currentTest.getDifficulty();
         }
 
-        return total / count;
+        return currentTest.getDifficulty() + ((total / count) * 0.25);
     }
 
     // Methods for calculating procrastination and recommended start dates based on the model's predictions
