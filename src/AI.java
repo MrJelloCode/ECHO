@@ -103,17 +103,10 @@ public class AI {
         assignments.add(assignment);
     }
 
-    public void removeAssignment(Assignment assignment) {
-        assignments.remove(assignment);
-    }
-
     public void addTest(Test test) {
         tests.add(test);
     }
 
-    public void removeTest(Test test) {
-        tests.remove(test);
-    }
 
     // Predicts hours needed to reach the student's grade goal.
     // Formula: hours = (w0 * difficulty) + (gradeGoal - 80) * w2 + avgHours * w1
