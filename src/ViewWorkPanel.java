@@ -142,9 +142,9 @@ public class ViewWorkPanel extends JPanel {
 
         AI ai = authService.getCurrentAI();
 
-        double hoursToReachGoal   = ai.predictHoursToReachGoal(test);
+        double hoursToReachGoal = ai.predictHoursToReachGoal(test);
         LocalDate recommendedStart = ai.getRecommendedStartDate(test);
-        long daysUntilStart       = java.time.temporal.ChronoUnit.DAYS.between(LocalDate.now(), recommendedStart);
+        long daysUntilStart = java.time.temporal.ChronoUnit.DAYS.between(LocalDate.now(), recommendedStart);
 
         StringBuilder output = new StringBuilder();
 

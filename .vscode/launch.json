@@ -6,6 +6,13 @@
             "name": "MainFrame",
             "request": "launch",
             "mainClass": "MainFrame",
+            "projectName": "ECHO_b2d13d06"
+        },
+        {
+            "type": "java",
+            "name": "MainFrame",
+            "request": "launch",
+            "mainClass": "MainFrame",
             "projectName": "ECHO_afdbe177"
         },
         {

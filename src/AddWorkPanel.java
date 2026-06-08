@@ -40,9 +40,9 @@ public class AddWorkPanel extends JPanel {
     private JTextField tNameField;
     private JTextField tCourseField;
     private JTextField tDifficultyField;
-    private JCheckBox  tCumulativeCheckbox;
     private JTextField tGradeGoalField;
     private JTextField tDueDateField;
+    private JCheckBox  tCumulativeCheckbox;
 
     private JButton addButton;
     private JButton backButton;
