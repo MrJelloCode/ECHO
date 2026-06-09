@@ -1,8 +1,9 @@
 /*
-Name: Malaravan.V
-Date: May 11th 2026
+Name: Malaravan.V and Jonah Ho
+Date: June 8th 2026
 Purpose: Represents a test with its details
 */
+
 // Libraries and packages
 package courseWork;
 import java.time.LocalDate;
@@ -91,8 +92,6 @@ public class Test {
     public void setDifficulty(int difficulty) {
         this.difficulty = difficulty;
     }
-
- 
 
     public boolean isCumulative() {
         return cumulative;

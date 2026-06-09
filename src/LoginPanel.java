@@ -1,5 +1,10 @@
+/*
+Name: Malaravan.V and Jonah Ho
+Date: June 8th 2026
+Purpose: LoginPanel class to handle user login and transition to the dashboard
+*/
 
-
+//libraries and packages
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -7,6 +12,7 @@ import java.awt.event.ActionListener;
 
 public class LoginPanel extends JPanel {
 
+    // References to the main frame and authentication service for managing user data and navigation
     private MainFrame frame;
 
     private AuthService authService;
@@ -23,6 +29,8 @@ public class LoginPanel extends JPanel {
 
     public LoginPanel(MainFrame frame, AuthService authService) {
 
+
+        // Initialize references and set up the panel layout and components
         this.frame = frame;
 
         this.authService = authService;
@@ -62,6 +70,7 @@ public class LoginPanel extends JPanel {
         loginButton.addActionListener(new ActionListener() {
 
             @Override
+            // Handle login button click: validate username, set user data in auth service, and navigate to dashboard
             public void actionPerformed(ActionEvent e) {
 
                 String username = usernameField.getText().trim();

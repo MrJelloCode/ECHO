@@ -1,9 +1,11 @@
 /*
 Name: Malaravan.V
-Date: May 11th 2026
+Date: June 8th 2026
 Purpose: Panel for viewing the user's current workload, including assignments and tests
 */
 
+
+// Libraries and packages
 import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDate;
@@ -11,8 +13,10 @@ import java.time.LocalDate;
 import courseWork.Assignment;
 import courseWork.Test;
 
+
 public class ViewWorkPanel extends JPanel {
 
+    // References to the main frame and authentication service for managing user data and navigation
     private MainFrame frame;
     private AuthService authService;
 
@@ -27,8 +31,9 @@ public class ViewWorkPanel extends JPanel {
     private JScrollPane detailsScrollPane;
     private JButton completeButton;
 
+    // CONSTRUCTOR
     public ViewWorkPanel(MainFrame frame, AuthService authService) {
-
+        // Initialize references and set up the panel layout and components
         this.frame       = frame;
         this.authService = authService;
 
@@ -64,6 +69,7 @@ public class ViewWorkPanel extends JPanel {
         backButton.setBounds(430, 580, 120, 35);
         add(backButton);
 
+        // Add action listeners for list selection, complete button, and back button
         workList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) showSelectedWork();
         });
@@ -101,6 +107,7 @@ public class ViewWorkPanel extends JPanel {
         }
     }
 
+    // Show detailed information and AI predictions for the selected assignment
     private void showAssignmentDetails(Assignment assignment) {
 
         AI ai = authService.getCurrentAI();
@@ -130,6 +137,7 @@ public class ViewWorkPanel extends JPanel {
 
         output.append("Recommended Start Date: ").append(recommendedStart).append("\n");
 
+        // If the assignment is already completed, show hours spent and grade received
         if (assignment.isCompleted()) {
             output.append("\nHours Spent: ").append(assignment.getHoursSpent()).append("\n");
             output.append("Grade Received: ").append(assignment.getGradeReceived()).append("\n");
@@ -138,8 +146,10 @@ public class ViewWorkPanel extends JPanel {
         detailsArea.setText(output.toString());
     }
 
+    // Show detailed information and AI predictions for the selected test
     private void showTestDetails(Test test) {
 
+        
         AI ai = authService.getCurrentAI();
 
         double hoursToReachGoal = ai.predictHoursToReachGoal(test);
@@ -168,6 +178,7 @@ public class ViewWorkPanel extends JPanel {
 
         output.append("Recommended Start Date: ").append(recommendedStart).append("\n");
 
+        // If the test is already completed, show hours spent and grade received
         if (test.isCompleted()) {
             output.append("\nHours Spent: ").append(test.getHoursSpent()).append("\n");
             output.append("Grade Received: ").append(test.getGradeReceived()).append("\n");
@@ -181,6 +192,7 @@ public class ViewWorkPanel extends JPanel {
 
         Object selected = workList.getSelectedValue();
 
+        // If no item is selected, show an error message
         if (selected == null) {
             JOptionPane.showMessageDialog(this, "Please select an item first.");
             return;
@@ -193,6 +205,7 @@ public class ViewWorkPanel extends JPanel {
         }
     }
 
+    // Mark the selected assignment as complete, prompting the user to enter hours spent and grade received, then update the AI model and refresh the display
     private void markAssignmentComplete(Assignment assignment) {
 
         if (assignment.isCompleted()) {
@@ -200,6 +213,7 @@ public class ViewWorkPanel extends JPanel {
             return;
         }
 
+        // Prompt the user to enter hours spent and grade received, with input validation
         String hoursInput = JOptionPane.showInputDialog(this, "Enter hours spent:");
         if (hoursInput == null) return;
 
@@ -221,6 +235,7 @@ public class ViewWorkPanel extends JPanel {
                 return;
             }
 
+            // Update the assignment with the entered data, mark it as completed, retrain the AI model with the new data, save the user data, and refresh the display
             assignment.setHoursSpent(hoursSpent);
             assignment.setGradeReceived(gradeReceived);
             assignment.setCompleted(true);
@@ -236,7 +251,8 @@ public class ViewWorkPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "Please enter valid numbers.");
         }
     }
-
+    
+    // Mark the selected test as complete, prompting the user to enter hours spent and grade received, then update the AI model and refresh the display
     private void markTestComplete(Test test) {
 
         if (test.isCompleted()) {

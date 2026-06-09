@@ -1,3 +1,8 @@
+/*
+Name: Malaravan.V and Jonah Ho
+Date: June 8th 2026
+Purpose: AuthService class to manage user authentication, data saving, and loading of user-specific data
+*/
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -119,6 +124,7 @@ public class AuthService {
         }
     }
 
+    //load user data from file and populate the currentAI with the user's assignments, tests, and AI settings
     public void loadUserData() {
 
         currentAI = new AI();

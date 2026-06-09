@@ -1,3 +1,9 @@
+
+/*
+Name: Malaravan.V and Jonah Ho
+Date: June 8th 2026
+Purpose: DashboardPanel class to display the main dashboard with navigation options for the user after logging in
+*/
 import javax.swing.*;
 import java.awt.*;
 

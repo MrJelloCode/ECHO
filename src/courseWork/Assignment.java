@@ -1,6 +1,6 @@
 /*
 Name: Malaravan.V
-Date: June 1st 2026
+Date: June 8th 2026
 Purpose: Represents an assignment with its details
 */
 
@@ -142,7 +142,6 @@ public class Assignment{
     }
 
     // Returns assignment name and assignment tag to display in view work panels
-    @Override
     public String toString() {
         return "[Assignment] " + assignmentName;
     }
